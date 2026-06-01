@@ -8,6 +8,7 @@ import com.tingting.notifier.di.IoDispatcher
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.io.IOException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -66,6 +67,8 @@ class WebhookWorker @AssistedInject constructor(
             }
         } catch (e: IOException) {
             retryOrGiveUp("IO: ${e.message}")
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.w(e, "Webhook delivery error; giving up")
             Result.failure()
