@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -117,5 +118,88 @@ class HistoryViewModelTest {
         runCurrent()
         val state = model.uiState.first { it.isEmpty }
         assertThat(state.sections).isEmpty()
+    }
+
+    // --- search + date range -------------------------------------------------
+
+    private fun memoRepo() = FakeTransactionRepository().apply {
+        seed(
+            tx("com.VCB", "Vietcombank", 150_000, true, today, memo = "Thanh toan coffee"),
+            tx("com.mbmobile", "MB Bank", 450_000, true, todayEarlier, memo = "Luong thang 6"),
+            tx("com.mservice.momotransfer", "MoMo", 1_100_000, false, yesterday, memo = "Mua sam shop"),
+        )
+    }
+
+    @Test fun `search filters by content keyword`() = runTest {
+        val model = vm(memoRepo())
+        model.uiState.first { !it.isEmpty }
+        model.setSearchQuery("coffee")
+        advanceTimeBy(350)
+        val state = model.uiState.first { it.searchQuery == "coffee" && !it.isEmpty }
+        val rows = state.sections.flatMap { it.rows }
+        assertThat(rows).hasSize(1)
+        assertThat(rows.single().memo).contains("coffee")
+        assertThat(state.incomeTotal).isEqualTo(150_000)
+        assertThat(state.outgoingTotal).isEqualTo(0)
+    }
+
+    @Test fun `search filters by amount`() = runTest {
+        val model = vm(memoRepo())
+        model.uiState.first { !it.isEmpty }
+        model.setSearchQuery("450000")
+        advanceTimeBy(350)
+        val state = model.uiState.first { it.searchQuery == "450000" && !it.isEmpty }
+        val rows = state.sections.flatMap { it.rows }
+        assertThat(rows).hasSize(1)
+        assertThat(rows.single().amount).isEqualTo(450_000)
+    }
+
+    @Test fun `empty query restores all`() = runTest {
+        val model = vm(memoRepo())
+        model.setSearchQuery("coffee")
+        advanceTimeBy(350)
+        model.uiState.first { it.searchQuery == "coffee" && it.sections.flatMap { s -> s.rows }.size == 1 }
+
+        model.setSearchQuery("")
+        advanceTimeBy(350)
+        val state = model.uiState.first { it.searchQuery == "" && it.sections.flatMap { s -> s.rows }.size == 3 }
+        assertThat(state.sections.flatMap { it.rows }).hasSize(3)
+    }
+
+    @Test fun `search combined with income direction`() = runTest {
+        val model = vm(memoRepo())
+        model.uiState.first { !it.isEmpty }
+        model.setDirection(DirectionFilter.OUTGOING)
+        model.setSearchQuery("shop")
+        advanceTimeBy(350)
+        val state = model.uiState.first { it.direction == DirectionFilter.OUTGOING && it.searchQuery == "shop" && !it.isEmpty }
+        val rows = state.sections.flatMap { it.rows }
+        assertThat(rows).hasSize(1)
+        assertThat(rows.single().isIncome).isFalse()
+    }
+
+    @Test fun `date range filters and recomputes totals`() = runTest {
+        val model = vm(memoRepo())
+        model.uiState.first { !it.isEmpty }
+        // only today (both today + todayEarlier are >= today-window start)
+        model.setDateRange(todayEarlier, today)
+        advanceTimeBy(350)
+        val state = model.uiState.first { it.dateRange != HistoryViewModel.DateRange.ALL && !it.isEmpty }
+        val rows = state.sections.flatMap { it.rows }
+        assertThat(rows.map { it.amount }).containsExactly(150_000L, 450_000L)
+        assertThat(state.incomeTotal).isEqualTo(600_000)
+    }
+
+    @Test fun `clearDateRange resets to all`() = runTest {
+        val model = vm(memoRepo())
+        model.uiState.first { !it.isEmpty }
+        model.setDateRange(today, today)
+        advanceTimeBy(350)
+        model.uiState.first { it.dateRange != HistoryViewModel.DateRange.ALL }
+
+        model.clearDateRange()
+        advanceTimeBy(350)
+        val state = model.uiState.first { it.dateRange == HistoryViewModel.DateRange.ALL && it.sections.flatMap { s -> s.rows }.size == 3 }
+        assertThat(state.sections.flatMap { it.rows }).hasSize(3)
     }
 }

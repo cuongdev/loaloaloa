@@ -7,18 +7,32 @@ import com.tingting.notifier.data.repository.TransactionRepository
 import com.tingting.notifier.ui.util.DateLabels
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /** Income/outgoing filter for the chips. */
 enum class DirectionFilter { ALL, INCOME, OUTGOING }
+
+/** Maps the chip filter to the nullable isIncome facet of [TransactionRepository.searchRecords]. */
+private fun DirectionFilter.toIsIncome(): Boolean? = when (this) {
+    DirectionFilter.ALL -> null
+    DirectionFilter.INCOME -> true
+    DirectionFilter.OUTGOING -> false
+}
 
 /** A date-grouped section of history rows (header + rows). */
 data class HistorySection(
@@ -40,6 +54,8 @@ data class HistoryRow(
 data class HistoryUiState(
     val direction: DirectionFilter = DirectionFilter.ALL,
     val bankFilter: String? = null, // appId, null = all
+    val searchQuery: String = "",
+    val dateRange: HistoryViewModel.DateRange = HistoryViewModel.DateRange.ALL,
     val availableBanks: List<BankOption> = emptyList(),
     val incomeTotal: Long = 0,
     val outgoingTotal: Long = 0,
@@ -57,34 +73,61 @@ class HistoryViewModel @Inject constructor(
     private val zone: ZoneId,
 ) : ViewModel() {
 
+    /** Inclusive epoch-millis window; [ALL] means no date restriction. */
+    data class DateRange(val from: Long, val to: Long) {
+        val isAll: Boolean get() = this == ALL
+
+        companion object {
+            val ALL = DateRange(0L, Long.MAX_VALUE)
+        }
+    }
+
     private val direction = MutableStateFlow(DirectionFilter.ALL)
     private val bankFilter = MutableStateFlow<String?>(null)
+    private val searchQuery = MutableStateFlow("")
+    private val dateRange = MutableStateFlow(DateRange.ALL)
+
+    /** The current search inputs, threaded alongside the searched rows so the combine stays typed. */
+    private data class SearchedState(
+        val direction: DirectionFilter,
+        val query: String,
+        val range: DateRange,
+        val records: List<TransactionRecord>,
+    )
+
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+    private val searched =
+        combine(
+            searchQuery.debounce(300).distinctUntilChanged(),
+            direction,
+            dateRange,
+        ) { q, dir, range -> Triple(q, dir, range) }
+            .flatMapLatest { (q, dir, range) ->
+                transactions.searchRecords(q, dir.toIsIncome(), range.from, range.to)
+                    .map { SearchedState(dir, q, range, it) }
+            }
 
     val uiState: StateFlow<HistoryUiState> = combine(
+        searched,
         transactions.observeRecords(),
-        direction,
         bankFilter,
-    ) { records, dir, bank ->
+    ) { searchedState, allRecords, bank ->
         val today = LocalDate.now(clock.withZone(zone))
-        val filtered = records.filter { rec ->
-            val t = rec.transaction
-            val dirOk = when (dir) {
-                DirectionFilter.ALL -> true
-                DirectionFilter.INCOME -> t.isIncome
-                DirectionFilter.OUTGOING -> !t.isIncome
-            }
-            val bankOk = bank == null || t.appId == bank
-            dirOk && bankOk
-        }
 
-        val availableBanks = records
+        // The DAO search query has no appId facet; apply the bank chip as an in-VM predicate.
+        val filtered = searchedState.records.filter { bank == null || it.transaction.appId == bank }
+
+        // Bank chip options come from the full (unfiltered) history so the list stays stable.
+        val availableBanks = allRecords
             .map { BankOption(it.transaction.appId, it.transaction.bankName) }
             .distinctBy { it.appId }
             .sortedBy { it.displayName }
 
         HistoryUiState(
-            direction = dir,
+            direction = searchedState.direction,
             bankFilter = bank,
+            searchQuery = searchedState.query,
+            dateRange = searchedState.range,
             availableBanks = availableBanks,
             incomeTotal = filtered.filter { it.transaction.isIncome }.sumOf { it.transaction.amount },
             outgoingTotal = filtered.filter { !it.transaction.isIncome }.sumOf { it.transaction.amount },
@@ -117,6 +160,30 @@ class HistoryViewModel @Inject constructor(
     fun setDirection(filter: DirectionFilter) { direction.value = filter }
 
     fun setBankFilter(appId: String?) { bankFilter.value = appId }
+
+    /** Update the keyword search (debounced ~300ms before it re-queries). */
+    fun setSearchQuery(query: String) { searchQuery.value = query }
+
+    /**
+     * Restrict to an inclusive day range. [fromMillis]/[toMillis] are normalized to the
+     * start/end of their local day (in the injected [zone]); null/null clears to [DateRange.ALL].
+     */
+    fun setDateRange(fromMillis: Long?, toMillis: Long?) {
+        if (fromMillis == null && toMillis == null) {
+            dateRange.value = DateRange.ALL
+            return
+        }
+        val from = fromMillis ?: 0L
+        val to = toMillis ?: from
+        val startOfFrom = Instant.ofEpochMilli(from).atZone(zone).toLocalDate()
+            .atStartOfDay(zone).toInstant().toEpochMilli()
+        val endOfTo = Instant.ofEpochMilli(to).atZone(zone).toLocalDate()
+            .plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
+        dateRange.value = DateRange(startOfFrom, endOfTo)
+    }
+
+    /** Clear the date filter back to "all days". */
+    fun clearDateRange() { dateRange.value = DateRange.ALL }
 
     /** Delete one row; returns the deleted record so the UI can offer Snackbar undo. */
     fun delete(record: TransactionRecord) {
