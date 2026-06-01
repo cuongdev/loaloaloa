@@ -11,19 +11,16 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import com.tingting.notifier.data.model.SpeakOption
 import com.tingting.notifier.data.model.TransactionModel
-import com.tingting.notifier.data.model.UserSettings
-import com.tingting.notifier.data.repository.TransactionRepository
 import com.tingting.notifier.data.repository.UserSettingsRepository
 import com.tingting.notifier.di.IoDispatcher
+import com.tingting.notifier.ingest.TransactionIngestor
 import com.tingting.notifier.reliability.WatchdogScheduler
+import com.tingting.notifier.source.api.ApiTransactionSource
 import com.tingting.notifier.source.notification.DedupeGate
 import com.tingting.notifier.source.notification.NotificationProcessor
-import com.tingting.notifier.tts.QuietHoursGate
 import com.tingting.notifier.tts.TtsManager
 import dagger.hilt.android.AndroidEntryPoint
-import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -44,10 +41,10 @@ class TransferNotificationListenerService : NotificationListenerService() {
 
     @Inject lateinit var processor: NotificationProcessor
     @Inject lateinit var dedupeGate: DedupeGate
-    @Inject lateinit var quietHoursGate: QuietHoursGate
-    @Inject lateinit var transactionRepository: TransactionRepository
     @Inject lateinit var userSettingsRepository: UserSettingsRepository
     @Inject lateinit var ttsManager: TtsManager
+    @Inject lateinit var transactionIngestor: TransactionIngestor
+    @Inject lateinit var apiSource: ApiTransactionSource
 
     @Inject @IoDispatcher lateinit var ioDispatcher: CoroutineDispatcher
 
@@ -57,6 +54,24 @@ class TransferNotificationListenerService : NotificationListenerService() {
         super.onCreate()
         startForegroundNotification()
         WatchdogScheduler.schedule(this)
+        startApiSourceIfEnabled()
+    }
+
+    /**
+     * When the API source is enabled, start its polling loop and ingest every emitted
+     * transaction through the same [TransactionIngestor] the notification path uses.
+     * Guarded by [com.tingting.notifier.data.model.ApiConfig.enabled]; no-ops otherwise.
+     * The foreground service is already kept alive by the watchdog, so it hosts the loop.
+     */
+    private fun startApiSourceIfEnabled() {
+        scope.launch {
+            if (!userSettingsRepository.settings.first().api.enabled) return@launch
+            apiSource.start()
+            apiSource.transactions.collect { model ->
+                runCatching { transactionIngestor.ingest(model) }
+                    .onFailure { Timber.w(it, "Failed to ingest API transaction") }
+            }
+        }
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -85,21 +100,9 @@ class TransferNotificationListenerService : NotificationListenerService() {
                 return@launch
             }
 
-            // Persist regardless of announcement policy so history is always complete.
-            runCatching { transactionRepository.addTransaction(model) }
-                .onFailure { Timber.w(it, "Failed to persist transaction") }
-
-            // Quiet hours suppress only the voice, not the logging above.
-            val nowMinutesOfDay = LocalTime.now().let { it.hour * 60 + it.minute }
-            if (quietHoursGate.isQuiet(nowMinutesOfDay, settings.quietHours)) {
-                Timber.d("Quiet hours active; persisted but not announcing")
-                return@launch
-            }
-
-            if (shouldAnnounce(model, settings)) {
-                runCatching { ttsManager.speak(model, settings) }
-                    .onFailure { Timber.w(it, "Failed to announce transaction") }
-            }
+            // Shared funnel: persist always, announce per AnnouncePolicy (enableService,
+            // speakOption direction, quiet hours). Dedupe stays here at the source.
+            transactionIngestor.ingest(model)
         }
     }
 
@@ -112,6 +115,7 @@ class TransferNotificationListenerService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
+        apiSource.stop()
         ttsManager.shutdown()
         scope.cancel()
         super.onDestroy()
@@ -139,13 +143,6 @@ class TransferNotificationListenerService : NotificationListenerService() {
             Timber.w(e, "Failed to schedule restart")
         }
     }
-
-    private fun shouldAnnounce(model: TransactionModel, settings: UserSettings): Boolean =
-        when (settings.speakOption) {
-            SpeakOption.BOTH -> true
-            SpeakOption.INCOME_ONLY -> model.isIncome
-            SpeakOption.OUTGOING_ONLY -> !model.isIncome
-        }
 
     private fun dedupeKey(model: TransactionModel): String =
         model.appId + "|" + model.amount + "|" + model.rawText.filter { !it.isWhitespace() }
