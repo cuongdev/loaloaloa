@@ -9,15 +9,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,6 +32,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -33,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +58,10 @@ import com.tingting.notifier.data.model.TransactionRecord
 import com.tingting.notifier.ui.components.BankBadge
 import com.tingting.notifier.ui.components.MoneyText
 import com.tingting.notifier.ui.theme.LocalAppExtraColors
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +72,7 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
     val scope = rememberCoroutineScope()
     var detail by remember { mutableStateOf<TransactionRecord?>(null) }
     var confirmDeleteAll by remember { mutableStateOf(false) }
+    var datePickerOpen by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -82,10 +96,28 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
+                OutlinedTextField(
+                    value = state.searchQuery,
+                    onValueChange = viewModel::setSearchQuery,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    placeholder = { Text("Tìm theo số tiền, nội dung, số TK...") },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (state.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                                Icon(Icons.Filled.Close, contentDescription = "Xoá tìm kiếm")
+                            }
+                        }
+                    },
+                    singleLine = true,
+                )
+            }
+            item {
                 FilterRow(
                     state = state,
                     onDirection = viewModel::setDirection,
                     onBank = viewModel::setBankFilter,
+                    onOpenDatePicker = { datePickerOpen = true },
                 )
             }
             item { SummaryCard(income = state.incomeTotal, outgoing = state.outgoingTotal) }
@@ -138,6 +170,20 @@ fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
         TransactionDetailDialog(record = rec, onDismiss = { detail = null })
     }
 
+    if (datePickerOpen) {
+        HistoryDateRangeDialog(
+            onConfirm = { from, to ->
+                viewModel.setDateRange(from, to)
+                datePickerOpen = false
+            },
+            onClear = {
+                viewModel.clearDateRange()
+                datePickerOpen = false
+            },
+            onDismiss = { datePickerOpen = false },
+        )
+    }
+
     if (confirmDeleteAll) {
         AlertDialog(
             onDismissRequest = { confirmDeleteAll = false },
@@ -162,10 +208,11 @@ private fun FilterRow(
     state: HistoryUiState,
     onDirection: (DirectionFilter) -> Unit,
     onBank: (String?) -> Unit,
+    onOpenDatePicker: () -> Unit,
 ) {
     var bankMenu by remember { mutableStateOf(false) }
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -183,6 +230,12 @@ private fun FilterRow(
             selected = state.direction == DirectionFilter.OUTGOING,
             onClick = { onDirection(DirectionFilter.OUTGOING) },
             label = { Text("Tiền ra") },
+        )
+        FilterChip(
+            selected = !state.dateRange.isAll,
+            onClick = onOpenDatePicker,
+            label = { Text(dateRangeLabel(state.dateRange)) },
+            leadingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null) },
         )
         Box {
             val label = state.availableBanks.firstOrNull { it.appId == state.bankFilter }?.displayName ?: "Ngân hàng"
@@ -203,6 +256,43 @@ private fun FilterRow(
                 }
             }
         }
+    }
+}
+
+private val dayFmt = DateTimeFormatter.ofPattern("dd/MM", Locale("vi"))
+
+/** Chip label for the current date range: "Tất cả ngày" or "dd/MM – dd/MM" (system zone). */
+private fun dateRangeLabel(range: HistoryViewModel.DateRange): String {
+    if (range.isAll) return "Tất cả ngày"
+    val zone = ZoneId.systemDefault()
+    val from = Instant.ofEpochMilli(range.from).atZone(zone).toLocalDate().format(dayFmt)
+    val to = Instant.ofEpochMilli(range.to).atZone(zone).toLocalDate().format(dayFmt)
+    return if (from == to) from else "$from – $to"
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HistoryDateRangeDialog(
+    onConfirm: (Long?, Long?) -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val pickerState = rememberDateRangePickerState()
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(pickerState.selectedStartDateMillis, pickerState.selectedEndDateMillis)
+            }) { Text("Áp dụng") }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onClear) { Text("Tất cả ngày") }
+                TextButton(onClick = onDismiss) { Text("Huỷ") }
+            }
+        },
+    ) {
+        DateRangePicker(state = pickerState, modifier = Modifier.weight(1f, fill = false))
     }
 }
 
