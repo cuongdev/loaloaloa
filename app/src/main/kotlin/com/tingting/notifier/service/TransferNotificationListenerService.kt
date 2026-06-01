@@ -1,5 +1,6 @@
 package com.tingting.notifier.service
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,6 +17,7 @@ import com.tingting.notifier.data.model.UserSettings
 import com.tingting.notifier.data.repository.TransactionRepository
 import com.tingting.notifier.data.repository.UserSettingsRepository
 import com.tingting.notifier.di.IoDispatcher
+import com.tingting.notifier.reliability.WatchdogScheduler
 import com.tingting.notifier.source.notification.DedupeGate
 import com.tingting.notifier.source.notification.NotificationProcessor
 import com.tingting.notifier.tts.QuietHoursGate
@@ -57,6 +59,7 @@ class TransferNotificationListenerService : NotificationListenerService() {
     override fun onCreate() {
         super.onCreate()
         startForegroundNotification()
+        WatchdogScheduler.schedule(this)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -115,6 +118,29 @@ class TransferNotificationListenerService : NotificationListenerService() {
         ttsManager.shutdown()
         scope.cancel()
         super.onDestroy()
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        scheduleRestart()
+        super.onTaskRemoved(rootIntent)
+    }
+
+    /** Schedule a near-future restart broadcast so the listener is nudged back alive. */
+    private fun scheduleRestart() {
+        try {
+            val intent = Intent(this, ServiceRestartReceiver::class.java)
+                .setAction(ServiceRestartReceiver.ACTION_RESTART_SERVICE)
+            val pending = PendingIntent.getBroadcast(this, 1, intent, pendingIntentFlags())
+            val alarmManager = getSystemService(AlarmManager::class.java)
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis() + RESTART_DELAY_MILLIS,
+                pending,
+            )
+            Timber.d("Scheduled listener restart broadcast")
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to schedule restart")
+        }
     }
 
     private fun shouldAnnounce(model: TransactionModel, settings: UserSettings): Boolean =
@@ -186,5 +212,6 @@ class TransferNotificationListenerService : NotificationListenerService() {
         private const val CHANNEL_ID = "tingting_service"
         private const val FOREGROUND_ID = 1001
         private const val ACTION_STOP = "com.tingting.notifier.action.STOP"
+        private const val RESTART_DELAY_MILLIS = 2_000L
     }
 }
