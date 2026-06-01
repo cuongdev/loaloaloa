@@ -7,11 +7,15 @@ import com.google.gson.annotations.SerializedName
  * tolerantly: every field is nullable and amounts arrive as STRINGS, so a partial
  * or unexpected row deserializes without throwing. Normalization into the app's
  * [com.tingting.notifier.data.model.TransactionModel] is done by [SePayNormalizer].
+ *
+ * [transactions] is nullable because Gson honors an explicit `"transactions": null`
+ * in the payload (bypassing the Kotlin default), so callers must guard before
+ * iterating.
  */
 data class SePayListResponse(
     @SerializedName("status") val status: Int? = null,
     @SerializedName("error") val error: String? = null,
-    @SerializedName("transactions") val transactions: List<SePayTransactionDto> = emptyList(),
+    @SerializedName("transactions") val transactions: List<SePayTransactionDto>? = emptyList(),
 )
 
 data class SePayTransactionDto(

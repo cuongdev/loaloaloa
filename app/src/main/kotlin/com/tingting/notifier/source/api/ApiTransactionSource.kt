@@ -53,6 +53,13 @@ class ApiTransactionSource @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private var pollJob: Job? = null
 
+    // Cached Retrofit-backed client plus the (baseUrl, token) it was built from.
+    // Rebuilt only when either changes, so a steady-state poll loop reuses one
+    // Retrofit + GsonConverterFactory + proxy instead of allocating per cycle.
+    private var cachedApi: SePayApi? = null
+    private var cachedBaseUrl: String? = null
+    private var cachedToken: String? = null
+
     override fun start() {
         if (pollJob?.isActive == true) return
         pollJob = scope.launch { pollLoop() }
@@ -87,8 +94,10 @@ class ApiTransactionSource @Inject constructor(
 
         val lastSeen = config.lastSeenTxnId
         var maxSeen = lastSeen
+        // Guard a null list: Gson honors an explicit `"transactions": null` payload,
+        // which bypasses the DTO default and would NPE on iteration.
         // Oldest-first so emissions and the persisted cursor advance monotonically.
-        val newRows = response.transactions
+        val newRows = (response.transactions ?: emptyList())
             .filter { isNewerThanCursor(it.id, lastSeen) }
             .sortedBy { it.id?.toLongOrNull() ?: 0L }
 
@@ -118,13 +127,28 @@ class ApiTransactionSource @Inject constructor(
         return if (idNum != null && cursorNum != null) idNum > cursorNum else id != cursor
     }
 
-    private fun buildApi(config: ApiConfig): SePayApi =
-        Retrofit.Builder()
+    /**
+     * Return the cached [SePayApi], rebuilding it only when the base URL or token
+     * changed since the last build. The token isn't part of the Retrofit instance
+     * (it's a per-call header), but a token change is a credential switch, so we
+     * rebuild to drop any stale connection state.
+     */
+    private fun buildApi(config: ApiConfig): SePayApi {
+        val cached = cachedApi
+        if (cached != null && config.baseUrl == cachedBaseUrl && config.token == cachedToken) {
+            return cached
+        }
+        val api = Retrofit.Builder()
             .baseUrl(normalizeBaseUrl(config.baseUrl))
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(SePayApi::class.java)
+        cachedApi = api
+        cachedBaseUrl = config.baseUrl
+        cachedToken = config.token
+        return api
+    }
 
     /** Retrofit requires the base URL to end with `/`. */
     private fun normalizeBaseUrl(raw: String): String =
