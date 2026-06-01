@@ -30,16 +30,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tingting.notifier.data.model.TransactionRecord
+import com.tingting.notifier.permission.BatteryOptimizationHelper
+import com.tingting.notifier.permission.NotificationAccessHelper
 import com.tingting.notifier.ui.components.BankBadge
 import com.tingting.notifier.ui.components.MoneyText
 import com.tingting.notifier.ui.theme.LocalAppExtraColors
 import com.tingting.notifier.ui.theme.MoneyHeroStyle
 import com.tingting.notifier.ui.util.MoneyFormat
+import com.tingting.notifier.ui.util.OnResume
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +53,16 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Re-check granted permissions whenever Home resumes (e.g. after the user
+    // returns from the system notification-access / battery settings screen).
+    OnResume {
+        viewModel.updatePermissions(
+            notificationAccessGranted = NotificationAccessHelper.isGranted(context),
+            isIgnoringBatteryOptimizations = BatteryOptimizationHelper.isIgnoringBatteryOptimizations(context),
+        )
+    }
 
     Scaffold { padding ->
         LazyColumn(

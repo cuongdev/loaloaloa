@@ -1,6 +1,8 @@
 package com.tingting.notifier.di
 
 import com.tingting.notifier.BuildConfig
+import com.tingting.notifier.source.api.ApiTransactionSource
+import com.tingting.notifier.source.api.SePayConnectionTester
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,4 +40,9 @@ object ApiModule {
             .addInterceptor(logging)
             .build()
     }
+
+    /** Expose the polling source's one-shot connectivity check to the Settings UI. */
+    @Provides
+    @Singleton
+    fun provideSePayConnectionTester(source: ApiTransactionSource): SePayConnectionTester = source
 }

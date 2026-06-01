@@ -8,20 +8,35 @@ import com.tingting.notifier.data.model.QuietHours
 import com.tingting.notifier.data.model.SpeakOption
 import com.tingting.notifier.data.model.UserSettings
 import com.tingting.notifier.data.repository.UserSettingsRepository
+import com.tingting.notifier.source.api.SePayConnectionTester
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+
+/** Result of a one-shot SePay "Kiểm tra kết nối" attempt, surfaced to the UI. */
+sealed interface ConnectionTestState {
+    data object Idle : ConnectionTestState
+    data object Testing : ConnectionTestState
+    data class Success(val count: Int) : ConnectionTestState
+    data class Failure(val message: String) : ConnectionTestState
+}
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repo: UserSettingsRepository,
+    private val connectionTester: SePayConnectionTester,
 ) : ViewModel() {
 
     val uiState: StateFlow<UserSettings> = repo.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserSettings())
+
+    private val _connectionTest = MutableStateFlow<ConnectionTestState>(ConnectionTestState.Idle)
+    val connectionTest: StateFlow<ConnectionTestState> = _connectionTest.asStateFlow()
 
     fun setSpeakOption(option: SpeakOption) = launch { repo.updateSpeakOption(option) }
     fun setPlayChime(enabled: Boolean) = launch { repo.updatePlayChime(enabled) }
@@ -34,6 +49,26 @@ class SettingsViewModel @Inject constructor(
     fun setQuietHours(quietHours: QuietHours) = launch { repo.setQuietHours(quietHours) }
     fun setExcludedApps(apps: List<String>) = launch { repo.updateExcludedApps(apps) }
     fun setApiConfig(api: ApiConfig) = launch { repo.setApiConfig(api) }
+
+    /**
+     * Test connectivity for the SUPPLIED [config] (the values currently in the form,
+     * not necessarily persisted). Publishes Testing → Success/Failure on [connectionTest].
+     */
+    fun testConnection(config: ApiConfig) {
+        _connectionTest.value = ConnectionTestState.Testing
+        viewModelScope.launch {
+            val result = connectionTester.testConnection(config)
+            _connectionTest.value = result.fold(
+                onSuccess = { ConnectionTestState.Success(it) },
+                onFailure = { ConnectionTestState.Failure(it.message ?: "Không xác định") },
+            )
+        }
+    }
+
+    /** Reset the banner after the UI has shown the outcome. */
+    fun clearConnectionTest() {
+        _connectionTest.value = ConnectionTestState.Idle
+    }
 
     private fun launch(block: suspend () -> Unit) {
         viewModelScope.launch { block() }

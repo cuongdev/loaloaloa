@@ -23,6 +23,7 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,6 +31,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -58,7 +61,9 @@ fun ApiSourceScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.uiState.collectAsStateWithLifecycle()
+    val connectionTest by viewModel.connectionTest.collectAsStateWithLifecycle()
     val api = settings.api
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var enabled by remember { mutableStateOf(api.enabled) }
     var token by remember { mutableStateOf(api.token) }
@@ -67,7 +72,8 @@ fun ApiSourceScreen(
     var pollSeconds by remember { mutableStateOf(api.pollSeconds.coerceAtLeast(5)) }
     var tokenVisible by remember { mutableStateOf(false) }
 
-    // Re-sync form when persisted settings first load.
+    // Re-seed the form fields once the persisted settings arrive (the StateFlow
+    // starts at a blank default, then emits the real values from DataStore).
     LaunchedEffect(api) {
         enabled = api.enabled
         token = api.token
@@ -76,16 +82,32 @@ fun ApiSourceScreen(
         pollSeconds = api.pollSeconds.coerceAtLeast(5)
     }
 
-    fun persist() {
-        viewModel.setApiConfig(
-            api.copy(
-                enabled = enabled,
-                token = token.trim(),
-                account = account.trim(),
-                baseUrl = baseUrl.trim(),
-                pollSeconds = pollSeconds,
-            ),
-        )
+    fun currentConfig(): ApiConfig = api.copy(
+        enabled = enabled,
+        token = token.trim(),
+        account = account.trim(),
+        baseUrl = baseUrl.trim(),
+        pollSeconds = pollSeconds,
+    )
+
+    fun persist() = viewModel.setApiConfig(currentConfig())
+
+    val testing = connectionTest is ConnectionTestState.Testing
+
+    // Surface the test outcome as a Snackbar, then reset the state.
+    LaunchedEffect(connectionTest) {
+        when (val s = connectionTest) {
+            is ConnectionTestState.Success -> {
+                val suffix = if (s.count > 0) " (${s.count} giao dịch)" else ""
+                snackbarHostState.showSnackbar("Kết nối thành công$suffix")
+                viewModel.clearConnectionTest()
+            }
+            is ConnectionTestState.Failure -> {
+                snackbarHostState.showSnackbar("Lỗi kết nối: ${s.message}")
+                viewModel.clearConnectionTest()
+            }
+            else -> Unit
+        }
     }
 
     Scaffold(
@@ -98,13 +120,26 @@ fun ApiSourceScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest, shadowElevation = 8.dp) {
                 Row(
                     Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    OutlinedButton(onClick = { persist() }, modifier = Modifier.weight(1f)) { Text("Kiểm tra kết nối") }
+                    OutlinedButton(
+                        onClick = { viewModel.testConnection(currentConfig()) },
+                        enabled = !testing,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        if (testing) {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            Spacer(Modifier.size(8.dp))
+                            Text("Đang kiểm tra")
+                        } else {
+                            Text("Kiểm tra kết nối")
+                        }
+                    }
                     Button(onClick = { persist() }, modifier = Modifier.weight(1f)) { Text("Lưu") }
                 }
             }

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -45,7 +46,7 @@ class ApiTransactionSource @Inject constructor(
     private val normalizer: SePayNormalizer,
     private val okHttpClient: OkHttpClient,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-) : TransactionSource {
+) : TransactionSource, SePayConnectionTester {
 
     private val _transactions = MutableSharedFlow<TransactionModel>(extraBufferCapacity = 64)
     override val transactions: SharedFlow<TransactionModel> = _transactions.asSharedFlow()
@@ -81,6 +82,28 @@ class ApiTransactionSource @Inject constructor(
             runCatching { pollOnce(config) }
                 .onFailure { Timber.w(it, "SePay poll cycle failed; continuing") }
             delay(pollDelaySeconds(config).seconds)
+        }
+    }
+
+    /**
+     * One-shot connection test for the Settings "Kiểm tra kết nối" button. Builds a
+     * client from the SUPPLIED [config] (the values currently entered in the form, not
+     * necessarily persisted), calls the list endpoint once on the IO dispatcher, and
+     * returns the number of rows on success or the failure wrapped in [Result].
+     * Does not touch the dedupe cursor or emit to [transactions].
+     */
+    override suspend fun testConnection(config: ApiConfig): Result<Int> = withContext(ioDispatcher) {
+        runCatching {
+            require(config.baseUrl.isNotBlank()) { "Chưa nhập địa chỉ máy chủ" }
+            require(config.token.isNotBlank()) { "Chưa nhập API token" }
+            val api = buildApi(config)
+            val response = api.list(
+                bearer = "Bearer ${config.token}",
+                account = config.account.ifBlank { null },
+                limit = DEFAULT_LIMIT,
+            )
+            response.error?.takeIf { it.isNotBlank() }?.let { error(it) }
+            (response.transactions ?: emptyList()).size
         }
     }
 
