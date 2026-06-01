@@ -38,9 +38,6 @@ import timber.log.Timber
  * extras and delegates all logic to the pure [NotificationProcessor] / [DedupeGate],
  * then persists and announces on a background scope. This is the impurity boundary:
  * `System.currentTimeMillis()` is read here, not in the testable classes.
- *
- * TODO(Plan 4): reboot restart (BootReceiver), task-removal restart, WorkManager
- * watchdog, and battery-optimization exemption are out of scope for this plan.
  */
 @AndroidEntryPoint
 class TransferNotificationListenerService : NotificationListenerService() {
