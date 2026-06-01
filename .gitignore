@@ -1,0 +1,17 @@
+# Source APK artifact (large binary, kept locally)
+*.xapk
+*.apk
+
+# Android / Gradle build output
+.gradle/
+build/
+*/build/
+local.properties
+.idea/
+*.iml
+.cxx/
+captures/
+.externalNativeBuild/
+
+# Kotlin
+.kotlin/
