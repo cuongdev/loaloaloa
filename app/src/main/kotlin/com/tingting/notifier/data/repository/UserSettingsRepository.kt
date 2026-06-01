@@ -5,6 +5,8 @@ import com.tingting.notifier.data.model.AudioOutput
 import com.tingting.notifier.data.model.QuietHours
 import com.tingting.notifier.data.model.SpeakOption
 import com.tingting.notifier.data.model.UserSettings
+import com.tingting.notifier.data.model.WebhookConfig
+import com.tingting.notifier.data.model.WebhookTrigger
 import kotlinx.coroutines.flow.Flow
 
 /** Typed user settings, observable as a [Flow] with a suspend update per field. */
@@ -27,4 +29,10 @@ interface UserSettingsRepository {
 
     /** Persist the polling source's last-seen provider transaction id (dedupe cursor). */
     suspend fun updateApiLastSeenTxnId(id: String)
+
+    suspend fun updateWebhookEnabled(enabled: Boolean)
+    suspend fun updateWebhookUrl(url: String)
+    suspend fun updateWebhookSecret(secret: String)
+    suspend fun updateWebhookTrigger(trigger: WebhookTrigger)
+    suspend fun setWebhookConfig(webhook: WebhookConfig)
 }

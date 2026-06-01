@@ -5,6 +5,8 @@ import com.tingting.notifier.data.model.AudioOutput
 import com.tingting.notifier.data.model.QuietHours
 import com.tingting.notifier.data.model.SpeakOption
 import com.tingting.notifier.data.model.UserSettings
+import com.tingting.notifier.data.model.WebhookConfig
+import com.tingting.notifier.data.model.WebhookTrigger
 import com.tingting.notifier.data.repository.UserSettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,4 +36,15 @@ class FakeUserSettingsRepository(
     override suspend fun setApiConfig(api: ApiConfig) = state.update { it.copy(api = api) }
     override suspend fun updateApiLastSeenTxnId(id: String) =
         state.update { it.copy(api = it.api.copy(lastSeenTxnId = id)) }
+
+    override suspend fun updateWebhookEnabled(enabled: Boolean) =
+        state.update { it.copy(webhook = it.webhook.copy(enabled = enabled)) }
+    override suspend fun updateWebhookUrl(url: String) =
+        state.update { it.copy(webhook = it.webhook.copy(url = url)) }
+    override suspend fun updateWebhookSecret(secret: String) =
+        state.update { it.copy(webhook = it.webhook.copy(secret = secret)) }
+    override suspend fun updateWebhookTrigger(trigger: WebhookTrigger) =
+        state.update { it.copy(webhook = it.webhook.copy(trigger = trigger)) }
+    override suspend fun setWebhookConfig(webhook: WebhookConfig) =
+        state.update { it.copy(webhook = webhook) }
 }

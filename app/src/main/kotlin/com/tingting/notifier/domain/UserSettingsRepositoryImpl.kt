@@ -6,6 +6,8 @@ import com.tingting.notifier.data.model.AudioOutput
 import com.tingting.notifier.data.model.QuietHours
 import com.tingting.notifier.data.model.SpeakOption
 import com.tingting.notifier.data.model.UserSettings
+import com.tingting.notifier.data.model.WebhookConfig
+import com.tingting.notifier.data.model.WebhookTrigger
 import com.tingting.notifier.data.repository.UserSettingsRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -66,5 +68,25 @@ class UserSettingsRepositoryImpl @Inject constructor(
 
     override suspend fun updateApiLastSeenTxnId(id: String) {
         dataStore.updateData { it.copy(api = it.api.copy(lastSeenTxnId = id)) }
+    }
+
+    override suspend fun updateWebhookEnabled(enabled: Boolean) {
+        dataStore.updateData { it.copy(webhook = it.webhook.copy(enabled = enabled)) }
+    }
+
+    override suspend fun updateWebhookUrl(url: String) {
+        dataStore.updateData { it.copy(webhook = it.webhook.copy(url = url)) }
+    }
+
+    override suspend fun updateWebhookSecret(secret: String) {
+        dataStore.updateData { it.copy(webhook = it.webhook.copy(secret = secret)) }
+    }
+
+    override suspend fun updateWebhookTrigger(trigger: WebhookTrigger) {
+        dataStore.updateData { it.copy(webhook = it.webhook.copy(trigger = trigger)) }
+    }
+
+    override suspend fun setWebhookConfig(webhook: WebhookConfig) {
+        dataStore.updateData { it.copy(webhook = webhook) }
     }
 }

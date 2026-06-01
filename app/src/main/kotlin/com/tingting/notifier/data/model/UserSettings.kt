@@ -32,6 +32,23 @@ data class ApiConfig(
     val lastSeenTxnId: String = "",
 )
 
+/** Which money directions should be pushed to the outbound webhook. */
+enum class WebhookTrigger { INCOME, OUTGOING, BOTH }
+
+/**
+ * Configuration for the outbound transaction webhook. When [enabled] and [url] is set,
+ * each detected transaction matching [trigger] is POSTed (via WorkManager) to [url];
+ * a non-empty [secret] is sent as the `X-Webhook-Secret` header. Additive fields with
+ * empty defaults keep previously-persisted settings JSON loading cleanly.
+ */
+@Serializable
+data class WebhookConfig(
+    val enabled: Boolean = false,
+    val url: String = "",
+    val secret: String = "",
+    val trigger: WebhookTrigger = WebhookTrigger.BOTH,
+)
+
 /** Root user-settings tree persisted via [androidx.datastore.core.DataStore]. */
 @Serializable
 data class UserSettings(
@@ -47,4 +64,5 @@ data class UserSettings(
     val repeat: Boolean = false,
     val quietHours: QuietHours = QuietHours(),
     val api: ApiConfig = ApiConfig(),
+    val webhook: WebhookConfig = WebhookConfig(),
 )
