@@ -18,8 +18,10 @@ import com.tingting.notifier.data.repository.UserSettingsRepository
 import com.tingting.notifier.di.IoDispatcher
 import com.tingting.notifier.source.notification.DedupeGate
 import com.tingting.notifier.source.notification.NotificationProcessor
+import com.tingting.notifier.tts.QuietHoursGate
 import com.tingting.notifier.tts.TtsManager
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -43,6 +45,7 @@ class TransferNotificationListenerService : NotificationListenerService() {
 
     @Inject lateinit var processor: NotificationProcessor
     @Inject lateinit var dedupeGate: DedupeGate
+    @Inject lateinit var quietHoursGate: QuietHoursGate
     @Inject lateinit var transactionRepository: TransactionRepository
     @Inject lateinit var userSettingsRepository: UserSettingsRepository
     @Inject lateinit var ttsManager: TtsManager
@@ -64,24 +67,34 @@ class TransferNotificationListenerService : NotificationListenerService() {
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
         val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()
-        val timestamp = System.currentTimeMillis()
+        // Read the clock once at the impurity boundary; reuse for both the model
+        // timestamp and the dedupe window so they describe the same instant.
+        val now = System.currentTimeMillis()
 
         scope.launch {
             val settings = userSettingsRepository.settings.first()
             if (!settings.enableService) return@launch
             if (packageName in settings.excludedApps) return@launch
 
-            val model = processor.process(packageName, title, text, bigText, timestamp)
+            val model = processor.process(packageName, title, text, bigText, timestampMillis = now)
                 ?: return@launch
 
             val key = dedupeKey(model)
-            if (dedupeGate.isDuplicate(key, System.currentTimeMillis())) {
+            if (dedupeGate.isDuplicate(key, now)) {
                 Timber.d("Duplicate notification dropped: %s", key)
                 return@launch
             }
 
+            // Persist regardless of announcement policy so history is always complete.
             runCatching { transactionRepository.addTransaction(model) }
                 .onFailure { Timber.w(it, "Failed to persist transaction") }
+
+            // Quiet hours suppress only the voice, not the logging above.
+            val nowMinutesOfDay = LocalTime.now().let { it.hour * 60 + it.minute }
+            if (quietHoursGate.isQuiet(nowMinutesOfDay, settings.quietHours)) {
+                Timber.d("Quiet hours active; persisted but not announcing")
+                return@launch
+            }
 
             if (shouldAnnounce(model, settings)) {
                 runCatching { ttsManager.speak(model, settings) }

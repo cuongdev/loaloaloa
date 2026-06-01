@@ -19,6 +19,7 @@ import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 /**
@@ -153,15 +154,40 @@ class TtsManager @Inject constructor(
         }
     }
 
-    private fun playChime(output: AudioOutput) {
+    /**
+     * Play the chime and SUSPEND until it finishes, so speech starts only after the
+     * chime (spec §6: "chime, then speech"). No-ops immediately when no asset ships
+     * ([chimeResId] == 0). Resumes on completion, on error, or after [CHIME_TIMEOUT_MS]
+     * so a stuck player can never hang the announcement.
+     */
+    private suspend fun playChime(output: AudioOutput) {
         if (chimeResId == 0) return // no asset shipped yet
+        val player = try {
+            MediaPlayer.create(context, chimeResId)?.apply {
+                setAudioAttributes(audioAttributes(output))
+            }
+        } catch (e: Exception) {
+            Timber.w(e, "Chime creation failed")
+            null
+        } ?: return
+
         try {
-            val player = MediaPlayer.create(context, chimeResId) ?: return
-            player.setAudioAttributes(audioAttributes(output))
-            player.setOnCompletionListener { it.release() }
-            player.start()
+            withTimeoutOrNull(CHIME_TIMEOUT_MS) {
+                suspendCancellableCoroutine<Unit> { cont ->
+                    player.setOnCompletionListener { if (cont.isActive) cont.resume(Unit) }
+                    player.setOnErrorListener { _, what, extra ->
+                        Timber.w("Chime playback error (what=%d, extra=%d)", what, extra)
+                        if (cont.isActive) cont.resume(Unit)
+                        true
+                    }
+                    cont.invokeOnCancellation { runCatching { player.stop() } }
+                    player.start()
+                }
+            }
         } catch (e: Exception) {
             Timber.w(e, "Chime playback failed")
+        } finally {
+            runCatching { player.release() }
         }
     }
 
@@ -199,5 +225,10 @@ class TtsManager @Inject constructor(
         } catch (e: Exception) {
             Timber.w(e, "TTS shutdown failed")
         }
+    }
+
+    private companion object {
+        /** Upper bound on how long to wait for the chime so it can never hang speech. */
+        const val CHIME_TIMEOUT_MS = 5_000L
     }
 }
