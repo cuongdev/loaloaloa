@@ -1,8 +1,10 @@
 package com.tingting.notifier.di
 
+import com.tingting.notifier.ingest.TransactionIngestor
 import com.tingting.notifier.parser.TransactionParser
 import com.tingting.notifier.source.notification.DedupeGate
 import com.tingting.notifier.source.notification.NotificationProcessor
+import com.tingting.notifier.ui.debug.DebugIngest
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,6 +35,12 @@ object SourceModule {
     @Provides
     @Singleton
     fun provideDedupeGate(): DedupeGate = DedupeGate()
+
+    /** Seam for the Debug screen: run a sample through the real ingest funnel. */
+    @Provides
+    @Singleton
+    fun provideDebugIngest(ingestor: TransactionIngestor): DebugIngest =
+        DebugIngest { model -> ingestor.ingest(model) }
 
     @Provides
     @IoDispatcher
