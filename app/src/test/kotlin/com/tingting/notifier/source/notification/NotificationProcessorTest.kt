@@ -1,11 +1,12 @@
 package com.tingting.notifier.source.notification
 
 import com.google.common.truth.Truth.assertThat
+import com.tingting.notifier.parser.TransactionParser
 import org.junit.Test
 
 class NotificationProcessorTest {
 
-    private val processor = NotificationProcessor()
+    private val processor = NotificationProcessor(TransactionParser())
 
     @Test fun `non-bank package returns null`() {
         val result = processor.process(

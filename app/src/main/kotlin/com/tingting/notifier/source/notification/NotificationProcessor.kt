@@ -3,16 +3,16 @@ package com.tingting.notifier.source.notification
 import com.tingting.notifier.data.model.TransactionModel
 import com.tingting.notifier.parser.BankRegistry
 import com.tingting.notifier.parser.TransactionParser
-import javax.inject.Inject
 
 /**
  * Pure transform from a posted notification's raw fields to a normalized
  * [TransactionModel], or null when the notification is not from a supported bank
  * or carries no recognizable amount. Holds no Android types so it is unit-tested
- * on the JVM. The [parser] is injected (cheap to construct) for testability.
+ * on the JVM. The [parser] is supplied by `SourceModule` (the single Hilt binding)
+ * and constructed directly in tests.
  */
-class NotificationProcessor @Inject constructor(
-    private val parser: TransactionParser = TransactionParser(),
+class NotificationProcessor(
+    private val parser: TransactionParser,
 ) {
     /**
      * @return a [TransactionModel] when [packageName] is a supported bank and the
