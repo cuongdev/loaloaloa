@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simplified white megaphone mark for the widget brand row (derived from logo.svg). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3,10v4c0,0.6 0.4,1 1,1h2l3,3.5c0.3,0.4 1,0.2 1,-0.4V5.9c0,-0.6 -0.7,-0.8 -1,-0.4L6,9H4C3.4,9 3,9.4 3,10z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M14,9 C15.3,10.6 15.3,13.4 14,15" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M16.5,7 C18.8,9.6 18.8,14.4 16.5,17" />
+</vector>

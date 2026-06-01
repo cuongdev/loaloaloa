@@ -1,11 +1,15 @@
 package com.tingting.notifier.ingest
 
+import android.content.Context
 import com.tingting.notifier.data.model.TransactionModel
 import com.tingting.notifier.data.repository.TransactionRepository
 import com.tingting.notifier.data.repository.UserSettingsRepository
 import com.tingting.notifier.tts.TtsManager
 import com.tingting.notifier.webhook.WebhookPolicy
 import com.tingting.notifier.webhook.WebhookSender
+import com.tingting.notifier.widget.TingTingWidget
+import androidx.glance.appwidget.updateAll
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,6 +31,7 @@ class TransactionIngestor @Inject constructor(
     private val userSettingsRepository: UserSettingsRepository,
     private val announcePolicy: AnnouncePolicy,
     private val webhookSender: WebhookSender,
+    @ApplicationContext private val appContext: Context,
 ) {
     /** Persist [model], then announce it when the current settings + time permit. */
     suspend fun ingest(model: TransactionModel) {
@@ -35,6 +40,11 @@ class TransactionIngestor @Inject constructor(
         // Persist regardless of announcement policy so history is always complete.
         runCatching { transactionRepository.addTransaction(model) }
             .onFailure { Timber.w(it, "Failed to persist transaction") }
+
+        // Live-refresh the home-screen widget so today's total + latest line update as
+        // money arrives. Guarded so a widget failure never affects ingest.
+        runCatching { TingTingWidget().updateAll(appContext) }
+            .onFailure { Timber.w(it, "Failed to refresh widget") }
 
         // Outbound webhook is independent of the announce decision: fire it whenever the
         // user's webhook policy matches, so transactions can be forwarded even when TTS

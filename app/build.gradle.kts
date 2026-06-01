@@ -69,6 +69,9 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.compiler.androidx)
 
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+
     implementation(libs.coroutines.android)
     implementation(libs.timber)
 
