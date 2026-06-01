@@ -31,6 +31,29 @@ interface TransactionDao {
     )
     fun filter(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionEntity>>
 
+    /**
+     * Keyword + date search. The trimmed keyword [q] matches against [TransactionEntity.rawText]
+     * (covers content/memo AND account numbers, which live in the raw text) OR
+     * [TransactionEntity.bankName]; the digits-only form [amountQ] matches the amount.
+     * Empty [q] (with empty [amountQ]) matches everything. [isIncome] optional (null = ignore);
+     * the [from]..[to] timestamp range is inclusive. Newest first.
+     */
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE (
+            :q = ''
+            OR rawText LIKE '%' || :q || '%'
+            OR bankName LIKE '%' || :q || '%'
+            OR (:amountQ != '' AND CAST(amount AS TEXT) LIKE '%' || :amountQ || '%')
+        )
+          AND (:isIncome IS NULL OR isIncome = :isIncome)
+          AND timestamp BETWEEN :from AND :to
+        ORDER BY timestamp DESC
+        """
+    )
+    fun search(q: String, amountQ: String, isIncome: Boolean?, from: Long, to: Long): Flow<List<TransactionEntity>>
+
     /** Sum of absolute amounts matching [isIncome] within the inclusive range; 0 if none. */
     @Query(
         """

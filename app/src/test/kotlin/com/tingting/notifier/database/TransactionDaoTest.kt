@@ -25,12 +25,13 @@ class TransactionDaoTest {
         isIncome: Boolean,
         timestamp: Long,
         bankName: String = appId,
+        rawText: String = "raw-$amount",
     ) = TransactionEntity(
         appId = appId,
         bankName = bankName,
         amount = amount,
         isIncome = isIncome,
-        rawText = "raw-$amount",
+        rawText = rawText,
         timestamp = timestamp,
     )
 
@@ -141,5 +142,82 @@ class TransactionDaoTest {
         dao.deleteAll()
 
         assertThat(dao.getAll().first()).isEmpty()
+    }
+
+    // --- search --------------------------------------------------------------
+
+    private val sampleRaw = "TK 0399999999(VND) +500,000 ND:Thanh toan don hang"
+
+    @Test fun `search matches content in rawText`() = runTest {
+        dao.insert(txn("com.mbmobile", 500_000, true, timestamp = 1_000, rawText = sampleRaw))
+        dao.insert(txn("com.VCB", 999, false, timestamp = 2_000, rawText = "khac"))
+
+        val hits = dao.search(q = "Thanh toan", amountQ = "", isIncome = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits.map { it.rawText }).containsExactly(sampleRaw)
+    }
+
+    @Test fun `search matches account number substring in rawText`() = runTest {
+        dao.insert(txn("com.mbmobile", 500_000, true, timestamp = 1_000, rawText = sampleRaw))
+        dao.insert(txn("com.VCB", 999, false, timestamp = 2_000, rawText = "khac"))
+
+        val hits = dao.search(q = "0399999999", amountQ = "0399999999", isIncome = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits.map { it.rawText }).containsExactly(sampleRaw)
+    }
+
+    @Test fun `search matches bankName`() = runTest {
+        dao.insert(txn("com.VCB", 100, true, timestamp = 1_000, bankName = "Vietcombank", rawText = "abc"))
+        dao.insert(txn("com.mbmobile", 200, true, timestamp = 2_000, bankName = "MB Bank", rawText = "abc"))
+
+        val hits = dao.search(q = "Vietcom", amountQ = "", isIncome = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits.map { it.bankName }).containsExactly("Vietcombank")
+    }
+
+    @Test fun `search matches exact amount`() = runTest {
+        dao.insert(txn("com.VCB", 500_000, true, timestamp = 1_000, rawText = "abc"))
+        dao.insert(txn("com.VCB", 12, true, timestamp = 2_000, rawText = "abc"))
+
+        val hits = dao.search(q = "500000", amountQ = "500000", isIncome = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits.map { it.amount }).containsExactly(500_000L)
+    }
+
+    @Test fun `search matches partial amount`() = runTest {
+        dao.insert(txn("com.VCB", 500_000, true, timestamp = 1_000, rawText = "abc"))
+        dao.insert(txn("com.VCB", 12, true, timestamp = 2_000, rawText = "abc"))
+
+        val hits = dao.search(q = "5000", amountQ = "5000", isIncome = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits.map { it.amount }).containsExactly(500_000L)
+    }
+
+    @Test fun `search with empty query returns all newest first`() = runTest {
+        dao.insert(txn("com.VCB", 100, true, timestamp = 1_000, rawText = "abc"))
+        dao.insert(txn("com.VCB", 200, true, timestamp = 3_000, rawText = "def"))
+        dao.insert(txn("com.VCB", 300, true, timestamp = 2_000, rawText = "ghi"))
+
+        val hits = dao.search(q = "", amountQ = "", isIncome = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits.map { it.timestamp }).containsExactly(3_000L, 2_000L, 1_000L).inOrder()
+    }
+
+    @Test fun `search with no-digit query does not false-match amounts`() = runTest {
+        dao.insert(txn("com.VCB", 999, true, timestamp = 1_000, bankName = "abc", rawText = "abc"))
+
+        val hits = dao.search(q = "zzz", amountQ = "", isIncome = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits).isEmpty()
+    }
+
+    @Test fun `search combined with isIncome filter`() = runTest {
+        dao.insert(txn("com.VCB", 100, true, timestamp = 1_000, rawText = "shop coffee"))
+        dao.insert(txn("com.VCB", 200, false, timestamp = 2_000, rawText = "shop tea"))
+
+        val hits = dao.search(q = "shop", amountQ = "", isIncome = true, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(hits.map { it.amount }).containsExactly(100L)
+    }
+
+    @Test fun `search combined with date range is inclusive newest first`() = runTest {
+        dao.insert(txn("com.VCB", 100, true, timestamp = 1_000, rawText = "x"))
+        dao.insert(txn("com.VCB", 200, true, timestamp = 2_000, rawText = "x"))
+        dao.insert(txn("com.VCB", 300, true, timestamp = 3_000, rawText = "x"))
+
+        val hits = dao.search(q = "x", amountQ = "", isIncome = null, from = 2_000, to = 3_000).first()
+        assertThat(hits.map { it.amount }).containsExactly(300L, 200L).inOrder()
     }
 }
