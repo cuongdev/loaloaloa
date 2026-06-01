@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.tingting.notifier.ui.banks.BanksScreen
+import com.tingting.notifier.ui.debug.DebugScreen
 import com.tingting.notifier.ui.history.HistoryScreen
 import com.tingting.notifier.ui.home.HomeScreen
 import com.tingting.notifier.ui.onboarding.OnboardingScreen
@@ -87,6 +88,7 @@ fun AppNavHost(
                     onOpenApiSource = { navController.navigate(Routes.API_SOURCE) },
                     onOpenWebhook = { navController.navigate(Routes.WEBHOOK) },
                     onOpenTroubleshooting = { navController.navigate(Routes.TROUBLESHOOTING) },
+                    onOpenDebug = { navController.navigate(Routes.DEBUG) },
                 )
             }
 
@@ -94,6 +96,7 @@ fun AppNavHost(
             composable(Routes.EXCLUDED_APPS) { ExcludedAppsScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.API_SOURCE) { ApiSourceScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.WEBHOOK) { WebhookScreen(onBack = { navController.popBackStack() }) }
+            composable(Routes.DEBUG) { DebugScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.TROUBLESHOOTING) { TroubleshootingScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.ONBOARDING) {
                 OnboardingScreen(

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Api
 import androidx.compose.material.icons.filled.AppBlocking
 import androidx.compose.material.icons.filled.AudioFile
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.DoNotDisturbOn
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -67,6 +68,7 @@ fun SettingsScreen(
     onOpenApiSource: () -> Unit,
     onOpenWebhook: () -> Unit,
     onOpenTroubleshooting: () -> Unit,
+    onOpenDebug: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val s by viewModel.uiState.collectAsStateWithLifecycle()
@@ -149,6 +151,8 @@ fun SettingsScreen(
                 NavRow(Icons.Filled.Api, "Nguồn API (SePay)", onClick = onOpenApiSource)
                 Divider()
                 NavRow(Icons.Filled.Webhook, "Webhook", onClick = onOpenWebhook)
+                Divider()
+                NavRow(Icons.Filled.BugReport, "Gửi thông báo thử", onClick = onOpenDebug)
                 Divider()
                 NavRow(Icons.Filled.Build, "Khắc phục sự cố", onClick = onOpenTroubleshooting)
             }

@@ -24,6 +24,7 @@ object Routes {
     const val EXCLUDED_APPS = "excluded_apps"
     const val API_SOURCE = "api_source"
     const val WEBHOOK = "webhook"
+    const val DEBUG = "debug"
 }
 
 /** The four bottom-navigation tabs (label + filled/outlined icons). */
