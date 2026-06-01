@@ -60,6 +60,10 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.compiler.androidx)
+
     implementation(libs.coroutines.android)
     implementation(libs.timber)
 
