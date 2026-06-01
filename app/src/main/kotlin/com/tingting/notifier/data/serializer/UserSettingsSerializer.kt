@@ -4,6 +4,8 @@ import androidx.datastore.core.Serializer
 import com.tingting.notifier.data.model.UserSettings
 import java.io.InputStream
 import java.io.OutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 /**
@@ -20,15 +22,19 @@ object UserSettingsSerializer : Serializer<UserSettings> {
     override val defaultValue: UserSettings = UserSettings()
 
     override suspend fun readFrom(input: InputStream): UserSettings =
-        try {
-            val bytes = input.readBytes()
-            if (bytes.isEmpty()) defaultValue
-            else json.decodeFromString(UserSettings.serializer(), bytes.decodeToString())
-        } catch (e: Exception) {
-            defaultValue
+        withContext(Dispatchers.IO) {
+            try {
+                val bytes = input.readBytes()
+                if (bytes.isEmpty()) defaultValue
+                else json.decodeFromString(UserSettings.serializer(), bytes.decodeToString())
+            } catch (e: Exception) {
+                defaultValue
+            }
         }
 
     override suspend fun writeTo(t: UserSettings, output: OutputStream) {
-        output.write(json.encodeToString(UserSettings.serializer(), t).encodeToByteArray())
+        withContext(Dispatchers.IO) {
+            output.write(json.encodeToString(UserSettings.serializer(), t).encodeToByteArray())
+        }
     }
 }

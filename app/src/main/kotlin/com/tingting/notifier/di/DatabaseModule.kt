@@ -21,5 +21,6 @@ object DatabaseModule {
         Room.databaseBuilder(context, AppDatabase::class.java, "tingting.db").build()
 
     @Provides
+    @Singleton
     fun provideTransactionDao(db: AppDatabase): TransactionDao = db.transactionDao()
 }
