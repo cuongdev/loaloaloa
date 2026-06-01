@@ -63,4 +63,8 @@ class UserSettingsRepositoryImpl @Inject constructor(
     override suspend fun setApiConfig(api: ApiConfig) {
         dataStore.updateData { it.copy(api = api) }
     }
+
+    override suspend fun updateApiLastSeenTxnId(id: String) {
+        dataStore.updateData { it.copy(api = it.api.copy(lastSeenTxnId = id)) }
+    }
 }

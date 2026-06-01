@@ -24,6 +24,12 @@ data class ApiConfig(
     val token: String = "",
     val account: String = "",
     val pollSeconds: Int = 30,
+    /**
+     * Provider transaction id of the most recent row ingested, used to dedupe the
+     * polling source across restarts. Additive field; an empty default keeps
+     * previously-persisted settings JSON loading cleanly.
+     */
+    val lastSeenTxnId: String = "",
 )
 
 /** Root user-settings tree persisted via [androidx.datastore.core.DataStore]. */

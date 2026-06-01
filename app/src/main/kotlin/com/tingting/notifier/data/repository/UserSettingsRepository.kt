@@ -24,4 +24,7 @@ interface UserSettingsRepository {
     suspend fun updateRepeat(enabled: Boolean)
     suspend fun setQuietHours(quietHours: QuietHours)
     suspend fun setApiConfig(api: ApiConfig)
+
+    /** Persist the polling source's last-seen provider transaction id (dedupe cursor). */
+    suspend fun updateApiLastSeenTxnId(id: String)
 }
