@@ -4,6 +4,8 @@ import com.tingting.notifier.data.model.TransactionModel
 import com.tingting.notifier.data.repository.TransactionRepository
 import com.tingting.notifier.data.repository.UserSettingsRepository
 import com.tingting.notifier.tts.TtsManager
+import com.tingting.notifier.webhook.WebhookPolicy
+import com.tingting.notifier.webhook.WebhookSender
 import java.time.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,6 +26,7 @@ class TransactionIngestor @Inject constructor(
     private val ttsManager: TtsManager,
     private val userSettingsRepository: UserSettingsRepository,
     private val announcePolicy: AnnouncePolicy,
+    private val webhookSender: WebhookSender,
 ) {
     /** Persist [model], then announce it when the current settings + time permit. */
     suspend fun ingest(model: TransactionModel) {
@@ -32,6 +35,14 @@ class TransactionIngestor @Inject constructor(
         // Persist regardless of announcement policy so history is always complete.
         runCatching { transactionRepository.addTransaction(model) }
             .onFailure { Timber.w(it, "Failed to persist transaction") }
+
+        // Outbound webhook is independent of the announce decision: fire it whenever the
+        // user's webhook policy matches, so transactions can be forwarded even when TTS
+        // is gated (quiet hours, direction, etc.).
+        if (WebhookPolicy.shouldFire(settings.webhook, model.isIncome)) {
+            runCatching { webhookSender.enqueue(model, settings.webhook) }
+                .onFailure { Timber.w(it, "Failed to enqueue webhook") }
+        }
 
         val nowMinutesOfDay = LocalTime.now().let { it.hour * 60 + it.minute }
         if (announcePolicy.shouldAnnounce(model, settings, nowMinutesOfDay)) {
