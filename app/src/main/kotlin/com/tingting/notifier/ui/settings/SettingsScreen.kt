@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.DoNotDisturbOn
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material.icons.automirrored.filled.ShortText
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -64,6 +65,7 @@ fun SettingsScreen(
     onOpenExcludedApps: () -> Unit,
     onOpenBanks: () -> Unit,
     onOpenApiSource: () -> Unit,
+    onOpenWebhook: () -> Unit,
     onOpenTroubleshooting: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -145,6 +147,8 @@ fun SettingsScreen(
                 NavRow(Icons.Filled.AccountBalance, "Ngân hàng hỗ trợ", onClick = onOpenBanks)
                 Divider()
                 NavRow(Icons.Filled.Api, "Nguồn API (SePay)", onClick = onOpenApiSource)
+                Divider()
+                NavRow(Icons.Filled.Webhook, "Webhook", onClick = onOpenWebhook)
                 Divider()
                 NavRow(Icons.Filled.Build, "Khắc phục sự cố", onClick = onOpenTroubleshooting)
             }

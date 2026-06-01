@@ -25,6 +25,7 @@ import com.tingting.notifier.ui.report.ReportScreen
 import com.tingting.notifier.ui.settings.ApiSourceScreen
 import com.tingting.notifier.ui.settings.ExcludedAppsScreen
 import com.tingting.notifier.ui.settings.SettingsScreen
+import com.tingting.notifier.ui.settings.WebhookScreen
 import com.tingting.notifier.ui.troubleshooting.TroubleshootingScreen
 
 @Composable
@@ -84,6 +85,7 @@ fun AppNavHost(
                     onOpenExcludedApps = { navController.navigate(Routes.EXCLUDED_APPS) },
                     onOpenBanks = { navController.navigate(Routes.BANKS) },
                     onOpenApiSource = { navController.navigate(Routes.API_SOURCE) },
+                    onOpenWebhook = { navController.navigate(Routes.WEBHOOK) },
                     onOpenTroubleshooting = { navController.navigate(Routes.TROUBLESHOOTING) },
                 )
             }
@@ -91,6 +93,7 @@ fun AppNavHost(
             composable(Routes.BANKS) { BanksScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.EXCLUDED_APPS) { ExcludedAppsScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.API_SOURCE) { ApiSourceScreen(onBack = { navController.popBackStack() }) }
+            composable(Routes.WEBHOOK) { WebhookScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.TROUBLESHOOTING) { TroubleshootingScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.ONBOARDING) {
                 OnboardingScreen(

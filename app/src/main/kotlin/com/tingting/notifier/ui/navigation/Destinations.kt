@@ -23,6 +23,7 @@ object Routes {
     const val TROUBLESHOOTING = "troubleshooting"
     const val EXCLUDED_APPS = "excluded_apps"
     const val API_SOURCE = "api_source"
+    const val WEBHOOK = "webhook"
 }
 
 /** The four bottom-navigation tabs (label + filled/outlined icons). */
