@@ -15,14 +15,14 @@ class TransactionParser {
         val keywordGroup: Int? = null,
     )
 
-    private val opts = setOf(RegexOption.IGNORE_CASE)
+    private val opts = setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
 
     // Order matters: more specific patterns first.
     private val rules: List<Rule> = listOf(
         // R1: "TK 0123(VND) +500,000"
         Rule(Regex("""TK\s++\d++\((?:VND|VNĐ)\)\s*+([+-])\s*+([\d.,]++)""", opts), amountGroup = 2, signGroups = listOf(1)),
         // R2: "So tien GD: +500000" / "PS: +500000"
-        Rule(Regex("""(?:So tien GD|Số tiên GD|PS)\s*+:\s*+([+-])?\s*+([\d.,]++)""", opts), amountGroup = 2, signGroups = listOf(1)),
+        Rule(Regex("""(?:So tien GD|Số tiền GD|PS)\s*+:\s*+([+-])?\s*+([\d.,]++)""", opts), amountGroup = 2, signGroups = listOf(1)),
         // R3: "+VND 500000" or "VND(+)500000"
         Rule(Regex("""(?:([+-])\s*+(?:VND|VNĐ)|(?:VND|VNĐ)\s*+\(([+-])\))\s*+([\d.,]++)""", opts), amountGroup = 3, signGroups = listOf(1, 2)),
         // R4: "tang/giam 500.000 VND"
@@ -30,13 +30,13 @@ class TransactionParser {
         // R5: "+500000 VND"
         Rule(Regex("""([+-])\s*+([\d.,]++)\s*+(?:VND|VNĐ)""", opts), amountGroup = 2, signGroups = listOf(1)),
         // R6: "+500.000đ"
-        Rule(Regex("""([+-])\s*+([\d.,\s]++)\s*+[₫đ]""", opts), amountGroup = 2, signGroups = listOf(1)),
+        Rule(Regex("""([+-])\s*+([\d., \t]++)\s*+[₫đ]""", opts), amountGroup = 2, signGroups = listOf(1)),
         // R7: "Số tiền: 500.000đ"
-        Rule(Regex("""(?:Số tiền|So tien)\s*+:?\s*+([+-])?\s*+([\d.,\s]++)\s*+(?:VND|VNĐ|[₫đd])""", opts), amountGroup = 2, signGroups = listOf(1)),
+        Rule(Regex("""(?:Số tiền|So tien)\s*+:?\s*+([+-])?\s*+([\d., \t]++)\s*+(?:VND|VNĐ|[₫đd])""", opts), amountGroup = 2, signGroups = listOf(1)),
     )
 
     private val increaseKeywords = setOf("tăng", "tang")
-    private val excludeKeywords = setOf("hoá đơn", "hóa đơn", "kỳ thanh toán")
+    private val excludeKeywords = setOf("hoá đơn", "hóa đơn", "hoa don", "kỳ thanh toán")
 
     /**
      * @return the parsed amount/direction, or null when the text contains no

@@ -73,6 +73,7 @@ class TransactionParserTest {
     @Test fun `spaced thousands grouping`() {
         val r = parser.parse("+1 200 000đ")!!
         assertThat(r.amount).isEqualTo(1_200_000)
+        assertThat(r.isIncome).isTrue()
     }
 
     // --- exclusions: bill reminders are not received money ---
@@ -85,5 +86,24 @@ class TransactionParserTest {
     @Test fun `unrelated text returns null`() {
         assertThat(parser.parse("Ban co mot tin nhan moi")).isNull()
         assertThat(parser.parse("")).isNull()
+    }
+
+    // validates multi-line debit detection (R4 + MULTILINE)
+    @Test fun `multiline giam is outgoing`() {
+        val r = parser.parse("Bien dong: giam 200.000 VND\nSo du: 1.000.000 VND")!!
+        assertThat(r.amount).isEqualTo(200_000)
+        assertThat(r.isIncome).isFalse()
+    }
+
+    // validates digits cannot merge across a newline
+    @Test fun `amount split across newline is not parsed`() {
+        assertThat(parser.parse("+500\n000đ")).isNull()
+    }
+
+    // R2 optional-sign else-branch defaults to income
+    @Test fun `PS without sign is income`() {
+        val r = parser.parse("PS: 75000")!!
+        assertThat(r.amount).isEqualTo(75_000)
+        assertThat(r.isIncome).isTrue()
     }
 }
