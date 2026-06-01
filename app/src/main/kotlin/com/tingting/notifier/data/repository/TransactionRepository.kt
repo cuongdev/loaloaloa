@@ -1,0 +1,29 @@
+package com.tingting.notifier.data.repository
+
+import com.tingting.notifier.data.model.TransactionModel
+import kotlinx.coroutines.flow.Flow
+
+/** Local history of money-movement events, exposed at the domain-model level. */
+interface TransactionRepository {
+
+    /** Persist a transaction; returns the new row id. */
+    suspend fun addTransaction(transaction: TransactionModel): Long
+
+    /** All transactions, newest first. */
+    fun getAll(): Flow<List<TransactionModel>>
+
+    /** Filtered history. [isIncome] / [appId] optional (null = ignore); range inclusive; newest first. */
+    fun filter(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionModel>>
+
+    /** Sum of amounts matching [isIncome] in the inclusive range; 0 if none. */
+    fun totalAmount(isIncome: Boolean, from: Long, to: Long): Flow<Long>
+
+    /** Distinct source app/provider ids present in the history (for filter chips). */
+    fun distinctAppIds(): Flow<List<String>>
+
+    /** Delete one transaction by row id. */
+    suspend fun delete(id: Long)
+
+    /** Delete the entire history. */
+    suspend fun deleteAll()
+}
