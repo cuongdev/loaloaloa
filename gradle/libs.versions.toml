@@ -21,6 +21,7 @@ coroutinesTest = "1.9.0"
 truth = "1.4.4"
 androidxJunit = "1.2.1"
 robolectric = "4.14"
+kotlinxSerialization = "1.7.3"
 
 [libraries]
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -54,6 +55,7 @@ coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 truth = { module = "com.google.truth:truth", version.ref = "truth" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidxJunit" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -61,3 +63,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
