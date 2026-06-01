@@ -19,6 +19,13 @@ interface TransactionRepository {
     /** Filtered history with row ids; same facet semantics as [filter]. */
     fun filterRecords(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionRecord>>
 
+    /**
+     * Keyword + date search with row ids. [query] matches content/account-number (rawText),
+     * bank name, or amount (digits-only form of the query). Empty [query] matches all.
+     * [isIncome] optional (null = ignore); [from]..[to] inclusive; newest first.
+     */
+    fun searchRecords(query: String, isIncome: Boolean?, from: Long, to: Long): Flow<List<TransactionRecord>>
+
     /** Filtered history. [isIncome] / [appId] optional (null = ignore); range inclusive; newest first. */
     fun filter(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionModel>>
 

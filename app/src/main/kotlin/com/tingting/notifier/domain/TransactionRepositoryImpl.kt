@@ -27,6 +27,12 @@ class TransactionRepositoryImpl @Inject constructor(
     override fun filterRecords(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionRecord>> =
         dao.filter(isIncome, appId, from, to).map { rows -> rows.map { it.toRecord() } }
 
+    override fun searchRecords(query: String, isIncome: Boolean?, from: Long, to: Long): Flow<List<TransactionRecord>> {
+        val q = query.trim()
+        val amountQ = q.filter { it.isDigit() }
+        return dao.search(q, amountQ, isIncome, from, to).map { rows -> rows.map { it.toRecord() } }
+    }
+
     override fun filter(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionModel>> =
         dao.filter(isIncome, appId, from, to).map { rows -> rows.map { it.toModel() } }
 

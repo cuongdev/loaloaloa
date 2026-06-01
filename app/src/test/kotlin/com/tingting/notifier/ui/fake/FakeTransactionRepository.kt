@@ -46,6 +46,23 @@ class FakeTransactionRepository(
     override fun filter(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionModel>> =
         filterRecords(isIncome, appId, from, to).map { list -> list.map { it.transaction } }
 
+    override fun searchRecords(query: String, isIncome: Boolean?, from: Long, to: Long): Flow<List<TransactionRecord>> {
+        val q = query.trim()
+        val amountQ = q.filter { it.isDigit() }
+        return rows.map { list ->
+            list.filter { rec ->
+                val t = rec.transaction
+                val keywordOk = q.isEmpty() ||
+                    t.rawText.contains(q, ignoreCase = true) ||
+                    t.bankName.contains(q, ignoreCase = true) ||
+                    (amountQ.isNotEmpty() && t.amount.toString().contains(amountQ))
+                keywordOk &&
+                    (isIncome == null || t.isIncome == isIncome) &&
+                    t.timestamp in from..to
+            }
+        }
+    }
+
     override fun totalAmount(isIncome: Boolean, from: Long, to: Long): Flow<Long> =
         rows.map { list ->
             list.filter { it.transaction.isIncome == isIncome && it.transaction.timestamp in from..to }

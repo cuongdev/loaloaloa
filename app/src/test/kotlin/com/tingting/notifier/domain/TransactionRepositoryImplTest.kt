@@ -24,12 +24,14 @@ class TransactionRepositoryImplTest {
         amount: Long,
         isIncome: Boolean,
         timestamp: Long,
+        bankName: String = appId,
+        rawText: String = "raw-$amount",
     ) = TransactionModel(
         appId = appId,
-        bankName = appId,
+        bankName = bankName,
         amount = amount,
         isIncome = isIncome,
-        rawText = "raw-$amount",
+        rawText = rawText,
         timestamp = timestamp,
     )
 
@@ -108,5 +110,24 @@ class TransactionRepositoryImplTest {
 
         val income = repo.filterRecords(isIncome = true, appId = null, from = 0, to = Long.MAX_VALUE).first()
         assertThat(income.map { it.id }).containsExactly(incomeId)
+    }
+
+    @Test fun `searchRecords matches content, amount, and empty query`() = runTest {
+        val coffeeId = repo.addTransaction(
+            model("com.mbmobile", 500_000, true, timestamp = 1_000, bankName = "MB Bank", rawText = "TK 0399999999(VND) +500,000 ND:coffee"),
+        )
+        repo.addTransaction(model("com.VCB", 200, false, timestamp = 2_000, bankName = "Vietcombank", rawText = "khac"))
+
+        // content match (digit-free query → amountQ empty, no false amount match)
+        val byContent = repo.searchRecords("coffee", null, 0, Long.MAX_VALUE).first()
+        assertThat(byContent.map { it.id }).containsExactly(coffeeId)
+
+        // amount match (query digits → amountQ)
+        val byAmount = repo.searchRecords("500000", null, 0, Long.MAX_VALUE).first()
+        assertThat(byAmount.map { it.id }).containsExactly(coffeeId)
+
+        // empty query → all
+        val all = repo.searchRecords("", null, 0, Long.MAX_VALUE).first()
+        assertThat(all).hasSize(2)
     }
 }
