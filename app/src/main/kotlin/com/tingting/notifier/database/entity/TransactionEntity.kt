@@ -3,6 +3,7 @@ package com.tingting.notifier.database.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.tingting.notifier.data.model.TransactionModel
+import com.tingting.notifier.data.model.TransactionRecord
 
 /**
  * Room row for a stored money-movement event. Mirrors [TransactionModel] but adds
@@ -37,4 +38,10 @@ fun TransactionEntity.toModel(): TransactionModel = TransactionModel(
     isIncome = isIncome,
     rawText = rawText,
     timestamp = timestamp,
+)
+
+/** Entity → id-carrying record (for UI rows that delete/undo by row id). */
+fun TransactionEntity.toRecord(): TransactionRecord = TransactionRecord(
+    id = id,
+    transaction = toModel(),
 )

@@ -92,4 +92,21 @@ class TransactionRepositoryImplTest {
         repo.deleteAll()
         assertThat(repo.getAll().first()).isEmpty()
     }
+
+    @Test fun `observeRecords carries row ids newest first`() = runTest {
+        val id1 = repo.addTransaction(model("com.VCB", 100, true, timestamp = 1_000))
+        val id2 = repo.addTransaction(model("com.mbmobile", 200, false, timestamp = 2_000))
+
+        val records = repo.observeRecords().first()
+        assertThat(records.map { it.id }).containsExactly(id2, id1).inOrder()
+        assertThat(records.first().transaction).isEqualTo(model("com.mbmobile", 200, false, timestamp = 2_000))
+    }
+
+    @Test fun `filterRecords carries row ids for the matching facet`() = runTest {
+        val incomeId = repo.addTransaction(model("com.VCB", 100, true, timestamp = 1_000))
+        repo.addTransaction(model("com.VCB", 200, false, timestamp = 2_000))
+
+        val income = repo.filterRecords(isIncome = true, appId = null, from = 0, to = Long.MAX_VALUE).first()
+        assertThat(income.map { it.id }).containsExactly(incomeId)
+    }
 }

@@ -1,6 +1,7 @@
 package com.tingting.notifier.data.repository
 
 import com.tingting.notifier.data.model.TransactionModel
+import com.tingting.notifier.data.model.TransactionRecord
 import kotlinx.coroutines.flow.Flow
 
 /** Local history of money-movement events, exposed at the domain-model level. */
@@ -11,6 +12,12 @@ interface TransactionRepository {
 
     /** All transactions, newest first. */
     fun getAll(): Flow<List<TransactionModel>>
+
+    /** All transactions with their row ids, newest first (UI list with delete/undo). */
+    fun observeRecords(): Flow<List<TransactionRecord>>
+
+    /** Filtered history with row ids; same facet semantics as [filter]. */
+    fun filterRecords(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionRecord>>
 
     /** Filtered history. [isIncome] / [appId] optional (null = ignore); range inclusive; newest first. */
     fun filter(isIncome: Boolean?, appId: String?, from: Long, to: Long): Flow<List<TransactionModel>>
