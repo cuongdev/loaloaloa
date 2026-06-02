@@ -66,6 +66,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SupportAgent
@@ -91,6 +92,7 @@ fun SettingsScreen(
     onOpenRelay: () -> Unit,
     onOpenTroubleshooting: () -> Unit,
     onOpenDebug: () -> Unit,
+    onSwitchMode: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val s by viewModel.uiState.collectAsStateWithLifecycle()
@@ -196,6 +198,16 @@ fun SettingsScreen(
                 NavRow(Icons.Filled.BugReport, "Gửi thông báo thử", locked = locked, onClick = onOpenDebug, onLocked = { lockedInfo = true })
                 Divider()
                 NavRow(Icons.Filled.Build, "Khắc phục sự cố", locked = locked, onClick = onOpenTroubleshooting, onLocked = { lockedInfo = true })
+            }
+
+            GroupHeader("Chế độ")
+            SettingsCard {
+                NavRow(
+                    icon = Icons.Filled.QrCodeScanner,
+                    title = "Đổi vai trò máy",
+                    value = "Chọn lại Chủ shop hoặc Nhân viên",
+                    onClick = onSwitchMode,
+                )
             }
 
             GroupHeader("Giới thiệu")
