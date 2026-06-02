@@ -43,6 +43,17 @@ jobs:
       - name: Install release tooling
         run: npm install
 
+      - name: Provision Firebase config
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
+            echo "Wrote app/google-services.json (FCM enabled in this build)."
+          else
+            echo "No GOOGLE_SERVICES_JSON secret set; building relay-inactive APK."
+          fi
+
       - name: Semantic release (version, build APK, publish)
         run: npx semantic-release
         env:
