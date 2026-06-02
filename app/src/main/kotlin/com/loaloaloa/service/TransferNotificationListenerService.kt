@@ -9,6 +9,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.os.PowerManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.loaloaloa.data.model.TransactionModel
@@ -50,6 +51,8 @@ class TransferNotificationListenerService : NotificationListenerService() {
 
     private val scope by lazy { CoroutineScope(SupervisorJob() + ioDispatcher) }
 
+    private val powerManager by lazy { getSystemService(PowerManager::class.java) }
+
     override fun onCreate() {
         super.onCreate()
         startForegroundNotification()
@@ -86,26 +89,40 @@ class TransferNotificationListenerService : NotificationListenerService() {
         // timestamp and the dedupe window so they describe the same instant.
         val now = System.currentTimeMillis()
 
+        // Acquire a partial wake lock SYNCHRONOUSLY here on the binder thread, before handing the
+        // work to the background coroutine. With the screen off the CPU can suspend the instant
+        // this callback returns — i.e. before the coroutine reaches TtsManager.speak, which only
+        // takes its own lock deep inside the suspend chain. That unprotected gap froze the
+        // announcement: the reported "screen off → no announcement" bug. Holding the lock from
+        // here bridges delivery → speak; it is always released in the coroutine's finally, with a
+        // timeout as a battery safety cap.
+        val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
+        runCatching { wakeLock.acquire(WAKE_LOCK_TIMEOUT_MS) }
+
         scope.launch {
-            val settings = userSettingsRepository.settings.first()
-            if (!settings.enableService) return@launch
-            if (packageName in settings.excludedApps) return@launch
+            try {
+                val settings = userSettingsRepository.settings.first()
+                if (!settings.enableService) return@launch
+                if (packageName in settings.excludedApps) return@launch
 
-            val model = processor.process(
-                packageName, title, text, bigText,
-                timestampMillis = now,
-                customApps = settings.customApps,
-            ) ?: return@launch
+                val model = processor.process(
+                    packageName, title, text, bigText,
+                    timestampMillis = now,
+                    customApps = settings.customApps,
+                ) ?: return@launch
 
-            val key = dedupeKey(model)
-            if (dedupeGate.isDuplicate(key, now)) {
-                Timber.d("Duplicate notification dropped: %s", key)
-                return@launch
+                val key = dedupeKey(model)
+                if (dedupeGate.isDuplicate(key, now)) {
+                    Timber.d("Duplicate notification dropped: %s", key)
+                    return@launch
+                }
+
+                // Shared funnel: persist always, announce per AnnouncePolicy (enableService,
+                // speakOption direction, quiet hours). Dedupe stays here at the source.
+                transactionIngestor.ingest(model)
+            } finally {
+                if (wakeLock.isHeld) runCatching { wakeLock.release() }
             }
-
-            // Shared funnel: persist always, announce per AnnouncePolicy (enableService,
-            // speakOption direction, quiet hours). Dedupe stays here at the source.
-            transactionIngestor.ingest(model)
         }
     }
 
@@ -210,5 +227,9 @@ class TransferNotificationListenerService : NotificationListenerService() {
         private const val FOREGROUND_ID = 1001
         private const val ACTION_STOP = "com.loaloaloa.action.STOP"
         private const val RESTART_DELAY_MILLIS = 2_000L
+
+        /** Wake-lock tag + safety-cap timeout bridging notification delivery → TTS speak. */
+        private const val WAKE_LOCK_TAG = "LoaLoaLoa:listener"
+        private const val WAKE_LOCK_TIMEOUT_MS = 60_000L
     }
 }
