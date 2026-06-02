@@ -9,14 +9,24 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.google.firebase.messaging.FirebaseMessaging
+import com.loaloaloa.data.model.RelayRegisterState
 import com.loaloaloa.data.model.RelayRoom
+import com.loaloaloa.data.repository.UserSettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.tasks.await
 import timber.log.Timber
+
+/**
+ * Pure mapping from FCM availability + token presence to the persisted [RelayRegisterState].
+ * Extracted so the decision is unit-testable without WorkManager/Firebase.
+ */
+fun relayRegisterStateFor(fcmAvailable: Boolean, token: String?): RelayRegisterState = when {
+    !fcmAvailable -> RelayRegisterState.NO_FCM
+    token.isNullOrBlank() -> RelayRegisterState.NO_FCM
+    else -> RelayRegisterState.REGISTERED
+}
 
 /**
  * Registers a device with its room's Sender (Cloudflare Worker) so the relay can route to it:
@@ -48,6 +58,8 @@ interface RelayRegistrar {
 @Singleton
 class WorkManagerRelayRegistrar @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val tokenProvider: FcmTokenProvider,
+    private val settingsRepository: UserSettingsRepository,
 ) : RelayRegistrar {
 
     override fun provision(room: RelayRoom) = enqueue(room, token = null)
@@ -55,12 +67,15 @@ class WorkManagerRelayRegistrar @Inject constructor(
     override fun registerToken(room: RelayRoom, token: String) = enqueue(room, token = token)
 
     override suspend fun registerCurrentToken(room: RelayRoom) {
-        val token = runCatching { FirebaseMessaging.getInstance().token.await() }.getOrNull()
-        if (token.isNullOrBlank()) {
-            Timber.w("Relay: no FCM token available (Firebase not configured?); registration deferred")
-            return
+        val available = tokenProvider.isFcmAvailable()
+        val token = if (available) tokenProvider.currentToken() else null
+        val state = relayRegisterStateFor(available, token)
+        settingsRepository.setRelayRegisterState(state)
+        if (state == RelayRegisterState.REGISTERED && token != null) {
+            registerToken(room, token)
+        } else {
+            Timber.w("Relay: spoke registration unavailable (state=%s)", state)
         }
-        registerToken(room, token)
     }
 
     /** Build the signed [RelayRegistration] body and enqueue a [RelayWorker] POST to `/register`. */

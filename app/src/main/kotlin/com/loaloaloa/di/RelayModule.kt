@@ -1,6 +1,8 @@
 package com.loaloaloa.di
 
+import com.loaloaloa.relay.FcmTokenProvider
 import com.loaloaloa.relay.OkHttpRelayDirectory
+import com.loaloaloa.relay.PlayServicesFcmTokenProvider
 import com.loaloaloa.relay.RelayDirectory
 import com.loaloaloa.relay.RelayRegistrar
 import com.loaloaloa.relay.WorkManagerRelayRegistrar
@@ -21,4 +23,8 @@ abstract class RelayModule {
     @Binds
     @Singleton
     abstract fun bindRelayDirectory(impl: OkHttpRelayDirectory): RelayDirectory
+
+    @Binds
+    @Singleton
+    abstract fun bindFcmTokenProvider(impl: PlayServicesFcmTokenProvider): FcmTokenProvider
 }

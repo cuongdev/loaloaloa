@@ -2,6 +2,7 @@ package com.loaloaloa.relay
 
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.loaloaloa.data.model.RelayRegisterState
 import com.loaloaloa.data.model.RelayRole
 import com.loaloaloa.data.repository.UserSettingsRepository
 import com.loaloaloa.ingest.TransactionIngestor
@@ -57,6 +58,7 @@ class RelayFirebaseMessagingService : FirebaseMessagingService() {
                 val settings = userSettingsRepository.settings.first()
                 if (settings.relayRole == RelayRole.SPOKE) {
                     registrar.registerToken(settings.relayRoom, token)
+                    userSettingsRepository.setRelayRegisterState(RelayRegisterState.REGISTERED)
                 }
             }.onFailure { Timber.w(it, "Relay: failed to register rotated FCM token") }
         }
