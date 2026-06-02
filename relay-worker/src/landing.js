@@ -14,6 +14,24 @@ const APK = "/download"; // Worker 302 -> env.APK_URL (the signed APK)
 
 const LOGO_SVG = `<svg width="44" height="44" viewBox="0 0 64 64" role="img" aria-label="Loa Loa Loa"><g fill="#0EA5A4"><path d="M6 26h8v12H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z"/><path d="M14 24 42 14v36L14 40z"/><path d="M20 40h6v9a3 3 0 0 1-6 0z"/></g><path d="M48 24q6 8 0 16" fill="none" stroke="#0EA5A4" stroke-width="3.5" stroke-linecap="round"/><path d="M54 19q10 13 0 26" fill="none" stroke="#5EEAD4" stroke-width="3.5" stroke-linecap="round"/></svg>`;
 
+const ICON = {
+  sound: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`,
+  bank: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 2 7 22 7 12 2"/></svg>`,
+  broadcast: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>`,
+  globe: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  link: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+  chart: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>`,
+  receipt: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>`,
+  widget: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>`,
+  refresh: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+  shield: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  phone: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+  lock: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  code: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+  megaphone: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2"/><path d="M5 9v6"/><path d="M19 3v18l-7-4H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h7l7-4z"/><path d="M22 8.5c1 1 1 5 0 7"/></svg>`,
+  download: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+};
+
 export function landingPage() {
   return `<!doctype html>
 <html lang="vi">
@@ -86,7 +104,7 @@ export function landingPage() {
          display:flex; gap:11px; align-items:center; animation:float 3.4s ease-in-out infinite}
   @media(max-width:520px){.toast{display:none}}
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-  .toast .ic{width:38px;height:38px;border-radius:11px;background:#e9fbf6;display:grid;place-items:center;font-size:20px;flex:0 0 auto}
+  .toast .ic{width:38px;height:38px;border-radius:11px;background:#e9fbf6;color:var(--teal);display:grid;place-items:center;flex:0 0 auto}
   .toast .am{font-weight:800;color:var(--green);font-size:16px;line-height:1.2}
   .toast .sub{font-size:12px;color:var(--muted)}
   .wave{display:inline-flex;gap:3px;align-items:flex-end;height:16px;margin-left:auto}
@@ -111,7 +129,7 @@ export function landingPage() {
   .card{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px;
         transition:transform .14s ease, box-shadow .14s ease}
   .card:hover{transform:translateY(-4px); box-shadow:0 18px 40px rgba(15,46,45,.1)}
-  .card .emo{font-size:26px} .card h3{font-size:18px; margin:12px 0 6px} .card p{color:var(--muted); font-size:15px}
+  .card .emo{width:48px;height:48px;border-radius:12px;background:#e9fbf6;color:var(--teal);display:grid;place-items:center} .card h3{font-size:18px; margin:12px 0 6px} .card p{color:var(--muted); font-size:15px}
 
   .steps{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; counter-reset:s}
   @media(max-width:860px){.steps{grid-template-columns:1fr 1fr}}
@@ -131,7 +149,7 @@ export function landingPage() {
   .secure{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:820px;margin:0 auto}
   @media(max-width:640px){.secure{grid-template-columns:1fr}}
   .sec-item{display:flex;gap:14px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
-  .sec-item .emo{font-size:24px}.sec-item b{display:block;margin-bottom:4px}.sec-item span{color:var(--muted);font-size:14.5px}
+  .sec-item .emo{width:48px;height:48px;border-radius:12px;background:#e9fbf6;color:var(--teal);display:grid;place-items:center;flex-shrink:0}.sec-item b{display:block;margin-bottom:4px}.sec-item span{color:var(--muted);font-size:14.5px}
 
   .final{background:linear-gradient(135deg,#0b7d7c,#0EA5A4);border-radius:28px;padding:56px 32px;text-align:center;color:#fff;
          box-shadow:0 28px 70px rgba(14,165,164,.32)}
@@ -161,19 +179,19 @@ export function landingPage() {
     <h1>Nghe rõ <span class="hl">tiền chuyển khoản</span> về — ngay khi nó tới.</h1>
     <p class="lead">Cái loa “Tiền về!” rảnh tay cho mọi quán xá Việt Nam. Ngân hàng vừa báo là điện thoại đọc to số tiền bằng tiếng Việt — không cần đăng nhập ngân hàng, không cần máy POS.</p>
     <div class="cta-row">
-      <a class="btn btn-primary" href="${APK}">⬇️ Tải APK</a>
-      <a class="btn btn-ghost" href="${WEB_DEMO}">🌐 Thử ngay trên web</a>
+      <a class="btn btn-primary" href="${APK}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Tải APK</a>
+      <a class="btn btn-ghost" href="${WEB_DEMO}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Thử ngay trên web</a>
     </div>
     <div class="trust">
       <span><b>Android 8.0+</b></span>
-      <span>🔒 <b>Riêng tư</b> trên máy</span>
-      <span>📡 <b>E2E</b> đa thiết bị</span>
+      <span><span style="display:inline-grid;width:16px;height:16px;place-items:center;color:var(--teal);vertical-align:-3px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span> <b>Riêng tư</b> trên máy</span>
+      <span><span style="display:inline-grid;width:16px;height:16px;place-items:center;color:var(--teal);vertical-align:-3px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg></span> <b>E2E</b> đa thiết bị</span>
     </div>
   </div>
   <div class="phone">
     <div class="frame"><img src="${SHOTS}/01-home.png" alt="Màn hình Loa Loa Loa" loading="eager" /></div>
     <div class="toast">
-      <div class="ic">📣</div>
+      <div class="ic">${ICON.megaphone}</div>
       <div>
         <div class="am">+500.000 đ</div>
         <div class="sub">“Tiền vào năm trăm nghìn”</div>
@@ -195,15 +213,15 @@ export function landingPage() {
   <h2>Mọi thứ một quán cần để “nghe được tiền”</h2>
   <p class="sec-lead">Đọc tiền, chuyển tiếp, báo cáo, widget — gọn trong một app, chạy bền cả ngày.</p>
   <div class="grid">
-    <div class="card"><div class="emo">🔊</div><h3>Đọc tiền tức thì</h3><p>“Tiền vào năm trăm nghìn đồng” vang lên ngay giây thông báo tới. Có chuông báo, cho lặp lại, hiện tổng ngày.</p></div>
-    <div class="card"><div class="emo">🏦</div><h3>Hợp ngân hàng bạn xài</h3><p>Đọc đúng thông báo MB Bank, Vietcombank, Techcombank… Thêm app khác cũng được.</p></div>
-    <div class="card"><div class="emo">📡</div><h3>Đa thiết bị (E2E)</h3><p>Máy có app ngân hàng bắn giao dịch sang mọi máy khác qua FCM. Máy chủ chỉ thấy chuỗi mã hoá.</p></div>
-    <div class="card"><div class="emo">🌐</div><h3>Nghe trên web</h3><p>Mở một đường link là nghe đọc giao dịch ngay trên trình duyệt — khỏi cần cài app.</p></div>
-    <div class="card"><div class="emo">🔗</div><h3>Chuyển tiếp khắp nơi</h3><p>Đẩy mỗi giao dịch sang Telegram, Google Sheets, POS, n8n. Nhiều đích, lọc theo ca / tiền vào-ra.</p></div>
-    <div class="card"><div class="emo">📊</div><h3>Báo cáo &amp; tăng trưởng</h3><p>Thu nhập ngày/tuần/tháng, xu hướng, giờ cao điểm, chia theo ngân hàng, xuất CSV.</p></div>
-    <div class="card"><div class="emo">🧾</div><h3>Chốt ca bàn giao</h3><p>Theo dõi tổng tiền ca hiện tại, bàn giao gọn giữa các nhân viên.</p></div>
-    <div class="card"><div class="emo">🧩</div><h3>Widget màn hình chính</h3><p>Liếc một cái thấy tổng tiền hôm nay + trạng thái dịch vụ. Dựng bằng Jetpack Glance.</p></div>
-    <div class="card"><div class="emo">🔁</div><h3>Sống sót pin &amp; reboot</h3><p>Foreground service + WorkManager + boot receiver giữ bộ lắng nghe không chết.</p></div>
+    <div class="card"><div class="emo">${ICON.sound}</div><h3>Đọc tiền tức thì</h3><p>“Tiền vào năm trăm nghìn đồng” vang lên ngay giây thông báo tới. Có chuông báo, cho lặp lại, hiện tổng ngày.</p></div>
+    <div class="card"><div class="emo">${ICON.bank}</div><h3>Hợp ngân hàng bạn xài</h3><p>Đọc đúng thông báo MB Bank, Vietcombank, Techcombank… Thêm app khác cũng được.</p></div>
+    <div class="card"><div class="emo">${ICON.broadcast}</div><h3>Đa thiết bị (E2E)</h3><p>Máy có app ngân hàng bắn giao dịch sang mọi máy khác qua FCM. Máy chủ chỉ thấy chuỗi mã hoá.</p></div>
+    <div class="card"><div class="emo">${ICON.globe}</div><h3>Nghe trên web</h3><p>Mở một đường link là nghe đọc giao dịch ngay trên trình duyệt — khỏi cần cài app.</p></div>
+    <div class="card"><div class="emo">${ICON.link}</div><h3>Chuyển tiếp khắp nơi</h3><p>Đẩy mỗi giao dịch sang Telegram, Google Sheets, POS, n8n. Nhiều đích, lọc theo ca / tiền vào-ra.</p></div>
+    <div class="card"><div class="emo">${ICON.chart}</div><h3>Báo cáo &amp; tăng trưởng</h3><p>Thu nhập ngày/tuần/tháng, xu hướng, giờ cao điểm, chia theo ngân hàng, xuất CSV.</p></div>
+    <div class="card"><div class="emo">${ICON.receipt}</div><h3>Chốt ca bàn giao</h3><p>Theo dõi tổng tiền ca hiện tại, bàn giao gọn giữa các nhân viên.</p></div>
+    <div class="card"><div class="emo">${ICON.widget}</div><h3>Widget màn hình chính</h3><p>Liếc một cái thấy tổng tiền hôm nay + trạng thái dịch vụ. Dựng bằng Jetpack Glance.</p></div>
+    <div class="card"><div class="emo">${ICON.refresh}</div><h3>Sống sót pin &amp; reboot</h3><p>Foreground service + WorkManager + boot receiver giữ bộ lắng nghe không chết.</p></div>
   </div>
 </div></section>
 
@@ -238,27 +256,27 @@ export function landingPage() {
   <h2>Tiền của bạn, dữ liệu của bạn</h2>
   <p class="sec-lead">Riêng tư từ gốc — không chỗ nào chạm vào tài khoản ngân hàng của bạn.</p>
   <div class="secure">
-    <div class="sec-item"><div class="emo">🚫</div><div><b>Không hỏi mật khẩu ngân hàng</b><span>Chỉ đọc thông báo mà ngân hàng vốn đã hiện cho bạn. Không xin, không lưu thông tin đăng nhập.</span></div></div>
-    <div class="sec-item"><div class="emo">📱</div><div><b>Ưu tiên ngay trên máy</b><span>Tách dữ liệu, database giao dịch, báo cáo — tất cả nằm trên điện thoại của bạn.</span></div></div>
-    <div class="sec-item"><div class="emo">🔐</div><div><b>Relay mã hoá đầu-cuối</b><span>AES-256-GCM ở hub, chỉ giải mã ở thiết bị đã ghép. Cloudflare chỉ giữ chuỗi mã hoá.</span></div></div>
-    <div class="sec-item"><div class="emo">📖</div><div><b>Mã nguồn mở</b><span>Đọc thẳng mã để xem app làm đúng những gì. Tự host relay được.</span></div></div>
+    <div class="sec-item"><div class="emo">${ICON.shield}</div><div><b>Không hỏi mật khẩu ngân hàng</b><span>Chỉ đọc thông báo mà ngân hàng vốn đã hiện cho bạn. Không xin, không lưu thông tin đăng nhập.</span></div></div>
+    <div class="sec-item"><div class="emo">${ICON.phone}</div><div><b>Ưu tiên ngay trên máy</b><span>Tách dữ liệu, database giao dịch, báo cáo — tất cả nằm trên điện thoại của bạn.</span></div></div>
+    <div class="sec-item"><div class="emo">${ICON.lock}</div><div><b>Relay mã hoá đầu-cuối</b><span>AES-256-GCM ở hub, chỉ giải mã ở thiết bị đã ghép. Cloudflare chỉ giữ chuỗi mã hoá.</span></div></div>
+    <div class="sec-item"><div class="emo">${ICON.code}</div><div><b>Mã nguồn mở</b><span>Đọc thẳng mã để xem app làm đúng những gì. Tự host relay được.</span></div></div>
   </div>
 </div></section>
 
 <section id="get"><div class="wrap">
   <div class="final">
-    <div style="font-size:46px">📣</div>
+    <div style="width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;margin:0 auto 4px">${ICON.megaphone}</div>
     <h2>Để cả quán cùng nghe tiền về</h2>
     <p>Tải về trong một phút, hoặc thử ngay trên web mà không cần cài gì.</p>
     <div class="cta-row" style="justify-content:center">
-      <a class="btn btn-primary" href="${APK}">⬇️ Tải APK</a>
-      <a class="btn btn-ghost" href="${WEB_DEMO}">🌐 Thử trên web</a>
+      <a class="btn btn-primary" href="${APK}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Tải APK</a>
+      <a class="btn btn-ghost" href="${WEB_DEMO}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> Thử trên web</a>
     </div>
   </div>
 </div></section>
 
 <footer><div class="wrap">
-  Làm cho người bán hàng Việt — những người chỉ mong nghe được tiếng tiền về. 📣<br/>
+  Làm cho người bán hàng Việt — những người chỉ mong nghe được tiếng tiền về. <span style="display:inline-grid;width:16px;height:16px;place-items:center;color:var(--teal-d);vertical-align:-3px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2"/><path d="M5 9v6"/><path d="M19 3v18l-7-4H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h7l7-4z"/><path d="M22 8.5c1 1 1 5 0 7"/></svg></span><br/>
   <a href="${REPO}">GitHub</a> · <a href="${WEB_DEMO}">Web demo</a> · <a href="${APK}">Tải APK</a> · © <span id="yr"></span> Loa Loa Loa
 </div></footer>
 
