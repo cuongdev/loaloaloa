@@ -95,6 +95,15 @@ data class WebhookConfig(
 enum class RelayRole { NONE, HUB, SPOKE }
 
 /**
+ * Observable outcome of the spoke's FCM-token registration with the room Sender. [IDLE] before any
+ * attempt (or after unpair); [REGISTERED] once a token was acquired and the `/register` POST was
+ * enqueued (WorkManager retries until it lands); [NO_FCM] when Firebase/Google Play Services is
+ * unavailable on this device so no token can be obtained. Drives the staff connection-status card.
+ * Additive field; an [IDLE] default keeps previously-persisted settings JSON loading cleanly.
+ */
+enum class RelayRegisterState { IDLE, REGISTERED, NO_FCM }
+
+/**
  * Default Sender (Cloudflare Worker) URL pre-filled when a shop creates a relay room, so the common
  * case is one tap. The shop can still overwrite it in the hub field to point at another deployment.
  */
@@ -179,6 +188,7 @@ data class UserSettings(
      * field; an empty default keeps previously-persisted settings JSON loading cleanly.
      */
     val relayRoom: RelayRoom = RelayRoom(),
+    val relayRegisterState: RelayRegisterState = RelayRegisterState.IDLE,
 )
 
 /**

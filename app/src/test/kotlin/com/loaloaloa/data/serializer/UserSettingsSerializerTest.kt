@@ -5,6 +5,7 @@ import com.loaloaloa.data.model.ApiConfig
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
 import com.loaloaloa.data.model.SpeakOption
+import com.loaloaloa.data.model.RelayRegisterState
 import com.loaloaloa.data.model.UserSettings
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -56,5 +57,25 @@ class UserSettingsSerializerTest {
     @Test fun `empty input returns default`() = runTest {
         val empty = ByteArrayInputStream(ByteArray(0))
         assertThat(serializer.readFrom(empty)).isEqualTo(UserSettings())
+    }
+
+    private suspend fun roundTrip(settings: UserSettings): UserSettings {
+        val out = ByteArrayOutputStream()
+        UserSettingsSerializer.writeTo(settings, out)
+        return UserSettingsSerializer.readFrom(out.toByteArray().inputStream())
+    }
+
+    @Test fun `relayRegisterState defaults to IDLE and round-trips`() = runTest {
+        val fresh = roundTrip(UserSettings())
+        assertThat(fresh.relayRegisterState).isEqualTo(RelayRegisterState.IDLE)
+
+        val saved = roundTrip(UserSettings(relayRegisterState = RelayRegisterState.NO_FCM))
+        assertThat(saved.relayRegisterState).isEqualTo(RelayRegisterState.NO_FCM)
+    }
+
+    @Test fun `legacy JSON without relayRegisterState loads as IDLE`() = runTest {
+        val legacyJson = """{"enableService":true}"""
+        val loaded = UserSettingsSerializer.readFrom(legacyJson.byteInputStream())
+        assertThat(loaded.relayRegisterState).isEqualTo(RelayRegisterState.IDLE)
     }
 }

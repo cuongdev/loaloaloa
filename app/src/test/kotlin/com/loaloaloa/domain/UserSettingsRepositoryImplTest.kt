@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.loaloaloa.data.model.ApiConfig
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
+import com.loaloaloa.data.model.RelayRegisterState
 import com.loaloaloa.data.model.SpeakOption
 import com.loaloaloa.data.model.UserSettings
 import com.loaloaloa.data.serializer.UserSettingsSerializer
@@ -111,5 +112,10 @@ class UserSettingsRepositoryImplTest {
         assertThat(s.playChime).isFalse()
         // unchanged fields keep defaults
         assertThat(s.speakOption).isEqualTo(SpeakOption.BOTH)
+    }
+
+    @Test fun `setRelayRegisterState persists the value`() = runTest {
+        repo.setRelayRegisterState(RelayRegisterState.NO_FCM)
+        assertThat(repo.settings.first().relayRegisterState).isEqualTo(RelayRegisterState.NO_FCM)
     }
 }
