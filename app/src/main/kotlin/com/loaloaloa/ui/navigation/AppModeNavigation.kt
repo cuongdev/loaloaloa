@@ -20,13 +20,6 @@ fun migrateAppMode(relayRole: RelayRole, notifAccessGranted: Boolean): AppMode =
     else -> AppMode.UNSET
 }
 
-/** Pure mode→destination mapping for the root host. */
-fun resolveStartMode(appMode: AppMode, notifAccessGranted: Boolean): String = when (appMode) {
-    AppMode.UNSET -> Routes.MODE_PICKER
-    AppMode.STAFF -> Routes.STAFF
-    AppMode.SHOP_OWNER -> if (notifAccessGranted) Routes.HOME else Routes.ONBOARDING
-}
-
 /** Derive the staff connection status from transport role + persisted FCM register state. */
 fun connectionStatusOf(relayRole: RelayRole, registerState: RelayRegisterState): StaffConnStatus = when {
     relayRole != RelayRole.SPOKE -> StaffConnStatus.NOT_PAIRED

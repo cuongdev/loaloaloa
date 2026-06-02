@@ -21,13 +21,6 @@ class AppModeNavigationTest {
         assertThat(migrateAppMode(RelayRole.NONE, notifAccessGranted = false)).isEqualTo(AppMode.UNSET)
     }
 
-    @Test fun `resolveStartMode routes each mode`() {
-        assertThat(resolveStartMode(AppMode.UNSET, notifAccessGranted = true)).isEqualTo(Routes.MODE_PICKER)
-        assertThat(resolveStartMode(AppMode.STAFF, notifAccessGranted = false)).isEqualTo(Routes.STAFF)
-        assertThat(resolveStartMode(AppMode.SHOP_OWNER, notifAccessGranted = false)).isEqualTo(Routes.ONBOARDING)
-        assertThat(resolveStartMode(AppMode.SHOP_OWNER, notifAccessGranted = true)).isEqualTo(Routes.HOME)
-    }
-
     @Test fun `connection status derives from role and register state`() {
         assertThat(connectionStatusOf(RelayRole.NONE, RelayRegisterState.IDLE))
             .isEqualTo(StaffConnStatus.NOT_PAIRED)

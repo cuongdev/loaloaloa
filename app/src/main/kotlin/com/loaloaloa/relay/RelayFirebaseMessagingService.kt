@@ -57,6 +57,8 @@ class RelayFirebaseMessagingService : FirebaseMessagingService() {
             runCatching {
                 val settings = userSettingsRepository.settings.first()
                 if (settings.relayRole == RelayRole.SPOKE) {
+                    // A concurrent unpair may leave role==SPOKE with a cleared room momentarily;
+                    // WorkManagerRelayRegistrar.enqueue() no-ops on a blank roomId, so this is safe.
                     registrar.registerToken(settings.relayRoom, token)
                     userSettingsRepository.setRelayRegisterState(RelayRegisterState.REGISTERED)
                 }
