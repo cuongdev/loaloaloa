@@ -38,3 +38,6 @@ skills-lock.json
 
 # Stray local debug screenshots at repo root (real ones live in docs/screenshots/)
 /screenshot_*.png
+
+# Internal planning docs / specs — not shipped in the public repo
+docs/superpowers/
