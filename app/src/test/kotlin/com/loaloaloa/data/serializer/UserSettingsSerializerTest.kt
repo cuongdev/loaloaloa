@@ -5,6 +5,7 @@ import com.loaloaloa.data.model.ApiConfig
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
 import com.loaloaloa.data.model.SpeakOption
+import com.loaloaloa.data.model.AppMode
 import com.loaloaloa.data.model.RelayRegisterState
 import com.loaloaloa.data.model.UserSettings
 import java.io.ByteArrayInputStream
@@ -77,5 +78,23 @@ class UserSettingsSerializerTest {
         val legacyJson = """{"enableService":true}"""
         val loaded = UserSettingsSerializer.readFrom(legacyJson.byteInputStream())
         assertThat(loaded.relayRegisterState).isEqualTo(RelayRegisterState.IDLE)
+    }
+
+    @Test fun `appMode defaults to UNSET and settingsVersion to 0`() = runTest {
+        val fresh = roundTrip(UserSettings())
+        assertThat(fresh.appMode).isEqualTo(AppMode.UNSET)
+        assertThat(fresh.settingsVersion).isEqualTo(0)
+    }
+
+    @Test fun `appMode and settingsVersion round-trip`() = runTest {
+        val saved = roundTrip(UserSettings(appMode = AppMode.STAFF, settingsVersion = 1))
+        assertThat(saved.appMode).isEqualTo(AppMode.STAFF)
+        assertThat(saved.settingsVersion).isEqualTo(1)
+    }
+
+    @Test fun `legacy JSON without appMode loads as UNSET version 0`() = runTest {
+        val loaded = UserSettingsSerializer.readFrom("""{"relayRole":"HUB"}""".byteInputStream())
+        assertThat(loaded.appMode).isEqualTo(AppMode.UNSET)
+        assertThat(loaded.settingsVersion).isEqualTo(0)
     }
 }

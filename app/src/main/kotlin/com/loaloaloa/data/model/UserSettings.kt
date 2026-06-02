@@ -104,6 +104,15 @@ enum class RelayRole { NONE, HUB, SPOKE }
 enum class RelayRegisterState { IDLE, REGISTERED, NO_FCM }
 
 /**
+ * Which UI shell this device shows, chosen on first launch and changeable via an explicit "switch
+ * mode" action. [SHOP_OWNER] is the full app (bank-logged-in HUB or standalone). [STAFF] is the
+ * pairing-first spoke shell. [UNSET] means no choice yet → show the mode picker. Orthogonal to
+ * [RelayRole]: mode drives the shell, role drives the relay transport. Additive field; an [UNSET]
+ * default keeps previously-persisted settings JSON loading cleanly (migrated once on first launch).
+ */
+enum class AppMode { UNSET, SHOP_OWNER, STAFF }
+
+/**
  * Default Sender (Cloudflare Worker) URL pre-filled when a shop creates a relay room, so the common
  * case is one tap. The shop can still overwrite it in the hub field to point at another deployment.
  */
@@ -189,6 +198,13 @@ data class UserSettings(
      */
     val relayRoom: RelayRoom = RelayRoom(),
     val relayRegisterState: RelayRegisterState = RelayRegisterState.IDLE,
+    /** UI-shell selection (see [AppMode]); [UNSET] shows the mode picker. Additive. */
+    val appMode: AppMode = AppMode.UNSET,
+    /**
+     * Settings schema version, bumped to 1 the first time new code touches the tree. Old payloads
+     * (and fresh defaults) read as 0; the one-time mode migration runs while this is < 1. Additive.
+     */
+    val settingsVersion: Int = 0,
 )
 
 /**

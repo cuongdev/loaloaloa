@@ -1,6 +1,7 @@
 package com.loaloaloa.ui.fake
 
 import com.loaloaloa.data.model.ApiConfig
+import com.loaloaloa.data.model.AppMode
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
 import com.loaloaloa.data.model.RelayRegisterState
@@ -65,4 +66,6 @@ class FakeUserSettingsRepository(
         state.update { it.copy(relayRoom = room) }
     override suspend fun setRelayRegisterState(value: RelayRegisterState) =
         state.update { it.copy(relayRegisterState = value) }
+    override suspend fun updateAppMode(mode: AppMode) =
+        state.update { it.copy(appMode = mode, settingsVersion = maxOf(it.settingsVersion, 1)) }
 }

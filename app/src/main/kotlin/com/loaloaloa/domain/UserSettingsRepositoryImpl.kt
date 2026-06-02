@@ -2,6 +2,7 @@ package com.loaloaloa.domain
 
 import androidx.datastore.core.DataStore
 import com.loaloaloa.data.model.ApiConfig
+import com.loaloaloa.data.model.AppMode
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
 import com.loaloaloa.data.model.RelayRegisterState
@@ -128,5 +129,9 @@ class UserSettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setRelayRegisterState(state: RelayRegisterState) {
         dataStore.updateData { it.copy(relayRegisterState = state) }
+    }
+
+    override suspend fun updateAppMode(mode: AppMode) {
+        dataStore.updateData { it.copy(appMode = mode, settingsVersion = maxOf(it.settingsVersion, 1)) }
     }
 }

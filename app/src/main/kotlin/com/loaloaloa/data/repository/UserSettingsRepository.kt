@@ -1,6 +1,7 @@
 package com.loaloaloa.data.repository
 
 import com.loaloaloa.data.model.ApiConfig
+import com.loaloaloa.data.model.AppMode
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
 import com.loaloaloa.data.model.RelayRegisterState
@@ -63,4 +64,7 @@ interface UserSettingsRepository {
 
     /** Persist the spoke's FCM registration outcome (drives the staff status card). */
     suspend fun setRelayRegisterState(state: RelayRegisterState)
+
+    /** Set the UI-shell mode and mark the settings schema as migrated (settingsVersion = 1). */
+    suspend fun updateAppMode(mode: AppMode)
 }
