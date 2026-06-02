@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -74,6 +75,7 @@ import java.util.Locale
 @Composable
 fun StaffShell(
     onOpenTts: () -> Unit,
+    onOpenShift: () -> Unit = {},
     onRequestBatteryExemption: () -> Unit = {},
     pairToken: String? = null,
     onPairTokenHandled: () -> Unit = {},
@@ -197,6 +199,7 @@ fun StaffShell(
                 onRetry = viewModel::retryRegister,
                 onRequestBatteryExemption = onRequestBatteryExemption,
                 onOpenTts = onOpenTts,
+                onOpenShift = onOpenShift,
                 onUnpair = viewModel::unpairToShop,
             )
             1 -> Box(Modifier.padding(padding)) { HistoryScreen() }
@@ -223,6 +226,7 @@ private fun LoaTab(
     onRetry: () -> Unit,
     onRequestBatteryExemption: () -> Unit,
     onOpenTts: () -> Unit,
+    onOpenShift: () -> Unit,
     onUnpair: () -> Unit,
 ) {
     Column(
@@ -274,6 +278,18 @@ private fun LoaTab(
                 Spacer(Modifier.size(12.dp))
                 Text("Cài đặt loa", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                 OutlinedButton(onClick = onOpenTts) { Text("Mở") }
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        ) {
+            Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.SwapHoriz, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.size(12.dp))
+                Text("Chốt ca / Bàn giao", modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                OutlinedButton(onClick = onOpenShift) { Text("Mở") }
             }
         }
 

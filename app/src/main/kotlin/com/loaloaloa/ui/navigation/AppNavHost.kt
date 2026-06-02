@@ -85,6 +85,7 @@ fun AppRoot(
                     composable(Routes.STAFF) {
                         StaffShell(
                             onOpenTts = { staffNav.navigate(Routes.STAFF_TTS) },
+                            onOpenShift = { staffNav.navigate(Routes.SHIFT) },
                             onRequestBatteryExemption = onRequestBatteryExemption,
                             pairToken = pairToken,
                             onPairTokenHandled = onPairTokenHandled,
@@ -92,6 +93,9 @@ fun AppRoot(
                     }
                     composable(Routes.STAFF_TTS) {
                         StaffTtsScreen(onBack = { staffNav.popBackStack() })
+                    }
+                    composable(Routes.SHIFT) {
+                        ShiftScreen(onBack = { staffNav.popBackStack() })
                     }
                 }
             }
