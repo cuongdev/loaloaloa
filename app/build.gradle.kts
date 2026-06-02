@@ -7,16 +7,25 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// The google-services plugin hard-fails if google-services.json is missing. Apply it only when the
+// shop has dropped in their Firebase config, so the project builds and runs (relay simply inactive)
+// before FCM is set up, and lights up automatically once the file is added. See relay-worker/README.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
-    namespace = "com.tingting.notifier"
+    namespace = "com.loaloaloa"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.tingting.notifier"
+        applicationId = "com.loaloaloa"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        // Version is injected by semantic-release in CI (env VERSION_NAME / VERSION_CODE);
+        // local builds fall back to a dev version so `./gradlew` works without the env.
+        versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
+        versionName = System.getenv("VERSION_NAME") ?: "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -33,7 +42,7 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures {
         compose = true
-        buildConfig = true // AGP 8 disables BuildConfig by default; TingTingApp uses BuildConfig.DEBUG
+        buildConfig = true // AGP 8 disables BuildConfig by default; LoaLoaLoaApp uses BuildConfig.DEBUG
     }
 
     sourceSets["main"].kotlin.srcDir("src/main/kotlin")
@@ -80,6 +89,19 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.datastore)
     implementation(libs.kotlinx.serialization.json)
+
+    // QR generation (hub publishes a pairing QR) + camera scanning (spoke joins by scanning it).
+    implementation(libs.zxing.android.embedded)
+
+    // FCM: wakes a spoke's process to receive relayed transactions even when dozing/killed.
+    // The BoM pins versions; the messaging artifact pulls in FirebaseMessagingService.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.analytics)
+    implementation(libs.coroutines.play.services)
+
+    // Microsoft Clarity — session recording + heatmaps for the in-app experience.
+    implementation(libs.clarity.compose)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)

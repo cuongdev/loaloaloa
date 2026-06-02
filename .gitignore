@@ -15,3 +15,26 @@ captures/
 
 # Kotlin
 .kotlin/
+
+# Firebase per-shop config (placed locally to activate FCM relay; see relay-worker/README.md).
+# Without it the app still builds — the relay just stays inactive.
+app/google-services.json
+
+# Cloudflare Worker live config: account id + KV/D1 ids + Firebase web config + keys.
+# Not secrets (FCM service account is a wrangler secret, never in the file), but kept out of
+# the public repo. Copy relay-worker/wrangler.toml.example and fill in your own values.
+relay-worker/wrangler.toml
+
+# FCM / Google service-account private keys — never commit.
+*service-account*.json
+*-fcm-*.json
+
+# Tooling / editor / agent caches (local only)
+.codegraph/
+.serena/
+.cursor/
+.agents/
+skills-lock.json
+
+# Stray local debug screenshots at repo root (real ones live in docs/screenshots/)
+/screenshot_*.png

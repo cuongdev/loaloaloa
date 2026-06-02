@@ -1,0 +1,51 @@
+name: Release
+
+# Semantic-release: on every push to main it reads the Conventional Commits since the last
+# tag, decides the next SemVer, builds the APK with that version stamped in, and publishes a
+# GitHub Release (vX.Y.Z) with auto-generated notes + the APK attached as `loaloaloa.apk`.
+# The /download relay route points at releases/latest/download/loaloaloa.apk, so a new release
+# automatically becomes the install link — no manual step.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install release tooling
+        run: npm install
+
+      - name: Semantic release (version, build APK, publish)
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Monotonically increasing Android versionCode, required to be unique per release.
+          VERSION_CODE: ${{ github.run_number }}

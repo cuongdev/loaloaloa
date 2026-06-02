@@ -1,0 +1,36 @@
+# Cloudflare Worker config for the Loa Loa Loa relay Sender.
+# Copy this file to `wrangler.toml` and fill in your own values, then `npx wrangler deploy`.
+# The real wrangler.toml is git-ignored because it carries your account id + resource ids.
+
+name = "loaloaloa"
+main = "src/worker.js"
+compatibility_date = "2024-12-01"
+account_id = "<YOUR_CLOUDFLARE_ACCOUNT_ID>"
+
+# KV namespace holding one entry per room: room:{roomId} -> { macKey, tokens[] }.
+#   npx wrangler kv namespace create RELAY_KV          # paste the printed id below
+[[kv_namespaces]]
+binding = "RELAY_KV"
+id = "<YOUR_KV_NAMESPACE_ID>"
+
+# D1 (SQLite) holding the encrypted transaction history the web dashboard reads back.
+# One row per transaction = { room, SHA-256(blob), blob (ciphertext), server-receipt ts }.
+# The relay stays E2E-blind — it stores only ciphertext, never plaintext. Create + migrate:
+#   npx wrangler d1 create loaloaloa-relay-history    # paste the printed database_id below
+#   npx wrangler d1 execute loaloaloa-relay-history --remote --file migrations/0001_history.sql
+[[d1_databases]]
+binding = "RELAY_DB"
+database_name = "loaloaloa-relay-history"
+database_id = "<YOUR_D1_DATABASE_ID>"
+
+# The Firebase service-account JSON is NOT stored here — it is a secret:
+#   npx wrangler secret put FCM_SERVICE_ACCOUNT       # paste the whole service-account .json
+# It is never committed or shipped in the APK.
+
+# Public, non-secret values. Uncomment + fill to enable the web-spoke PWA at /web.
+#   - FIREBASE_WEB_CONFIG: the Web app's firebaseConfig object, as one-line JSON.
+#   - VAPID_PUBLIC_KEY: Cloud Messaging -> Web configuration -> Web Push certificates -> key pair.
+[vars]
+FIREBASE_WEB_CONFIG = '{"apiKey":"<WEB_API_KEY>","authDomain":"<PROJECT>.firebaseapp.com","projectId":"<PROJECT>","storageBucket":"<PROJECT>.firebasestorage.app","messagingSenderId":"<SENDER_ID>","appId":"<WEB_APP_ID>"}'
+VAPID_PUBLIC_KEY = "<YOUR_WEB_PUSH_VAPID_PUBLIC_KEY>"
+APK_URL = "https://github.com/<owner>/<repo>/releases/latest/download/loaloaloa.apk"   # for /download (install-from-QR)

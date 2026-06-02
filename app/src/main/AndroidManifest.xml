@@ -12,22 +12,38 @@
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Spoke scans the hub's pairing QR with the camera. Optional feature so non-camera
+         devices (or hub-only phones) still install. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
-        android:name=".TingTingApp"
+        android:name=".LoaLoaLoaApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
-        android:theme="@style/Theme.TingTing">
+        android:theme="@style/Theme.LoaLoaLoa">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.TingTing">
+            android:theme="@style/Theme.LoaLoaLoa">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- App Link for the pairing QR/link "https://loaloaloa.haveuever.workers.dev/pair#<token>".
+                 With the app installed (and this host verified via /.well-known/assetlinks.json),
+                 scanning/tapping the link opens the app straight into pairing; otherwise the Sender's
+                 /pair page offers the APK. The token rides in the URL fragment, never sent to the server. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="loaloaloa.haveuever.workers.dev"
+                    android:pathPrefix="/pair" />
             </intent-filter>
         </activity>
 
@@ -43,6 +59,16 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Listens for bank transfer notifications to announce them aloud." />
+        </service>
+
+        <!-- Spoke-side relay receiver. FCM wakes this to deliver E2E-encrypted relayed transactions.
+             Inactive (never invoked) until google-services.json is added; see relay-worker/README. -->
+        <service
+            android:name=".relay.RelayFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
         </service>
 
         <receiver
@@ -61,20 +87,30 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.tingting.notifier.RESTART_SERVICE" />
+                <action android:name="com.loaloaloa.RESTART_SERVICE" />
             </intent-filter>
         </receiver>
 
         <receiver
-            android:name=".widget.TingTingWidgetReceiver"
+            android:name=".widget.LoaLoaLoaWidgetReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/tingting_widget_info" />
+                android:resource="@xml/loaloaloa_widget_info" />
         </receiver>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <provider
             android:name="androidx.startup.InitializationProvider"
