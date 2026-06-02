@@ -119,10 +119,10 @@ export function spokeIndexHtml() {
 '  .recrow .rv { font-size:16px; font-weight:700; margin-top:4px; }\n' +
 '  .headline { color:var(--muted); font-size:13px; margin:0 0 8px; }\n' +
 '  .hrow { display:flex; justify-content:space-between; gap:12px; border-top:1px solid var(--border-2); padding:11px 2px; }\n' +
-'  .hmeta { overflow:hidden; }\n' +
+'  .hmeta { min-width:0; flex:1; }\n' +
 '  .hbank { font-size:14px; font-weight:500; }\n' +
-'  .htime { color:var(--faint); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }\n' +
-'  .hamt { font-weight:700; white-space:nowrap; }\n' +
+'  .htime { color:var(--faint); font-size:12px; line-height:1.4; overflow-wrap:anywhere; }\n' +
+'  .hamt { font-weight:700; white-space:nowrap; flex-shrink:0; }\n' +
 '  .hamt.in { color:var(--green); } .hamt.out { color:var(--orange); }\n' +
 '  .daygroup { margin:18px 0 2px; }\n' +
 '  .dev { border-top:1px solid var(--border-2); padding:13px 2px; }\n' +
