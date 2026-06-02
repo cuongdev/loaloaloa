@@ -1,8 +1,10 @@
 package com.loaloaloa.data.repository
 
 import com.loaloaloa.data.model.ApiConfig
+import com.loaloaloa.data.model.AppMode
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
+import com.loaloaloa.data.model.RelayRegisterState
 import com.loaloaloa.data.model.RelayRole
 import com.loaloaloa.data.model.RelayRoom
 import com.loaloaloa.data.model.SpeakOption
@@ -59,4 +61,10 @@ interface UserSettingsRepository {
 
     /** Set the paired relay room, or pass an empty [RelayRoom] to clear the pairing. */
     suspend fun setRelayRoom(room: RelayRoom)
+
+    /** Persist the spoke's FCM registration outcome (drives the staff status card). */
+    suspend fun setRelayRegisterState(state: RelayRegisterState)
+
+    /** Set the UI-shell mode and mark the settings schema as migrated (settingsVersion = 1). */
+    suspend fun updateAppMode(mode: AppMode)
 }

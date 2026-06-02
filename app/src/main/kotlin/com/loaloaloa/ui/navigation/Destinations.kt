@@ -27,6 +27,9 @@ object Routes {
     const val RELAY = "relay"
     const val DEBUG = "debug"
     const val SHIFT = "shift"
+    const val MODE_PICKER = "mode_picker"
+    const val STAFF = "staff"
+    const val STAFF_TTS = "staff_tts"
 }
 
 /** The four bottom-navigation tabs (label + filled/outlined icons). */

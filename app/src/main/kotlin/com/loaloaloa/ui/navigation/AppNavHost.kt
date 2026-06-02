@@ -1,6 +1,9 @@
 package com.loaloaloa.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -10,7 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -18,10 +24,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.loaloaloa.data.model.AppMode
 import com.loaloaloa.ui.banks.BanksScreen
 import com.loaloaloa.ui.debug.DebugScreen
 import com.loaloaloa.ui.history.HistoryScreen
 import com.loaloaloa.ui.home.HomeScreen
+import com.loaloaloa.ui.mode.AppModeViewModel
+import com.loaloaloa.ui.mode.ModePickerScreen
+import com.loaloaloa.ui.mode.RootModeState
 import com.loaloaloa.ui.onboarding.OnboardingScreen
 import com.loaloaloa.ui.report.ReportScreen
 import com.loaloaloa.ui.shift.ShiftScreen
@@ -30,7 +40,74 @@ import com.loaloaloa.ui.settings.ExcludedAppsScreen
 import com.loaloaloa.ui.settings.RelaySettingsScreen
 import com.loaloaloa.ui.settings.SettingsScreen
 import com.loaloaloa.ui.settings.WebhookScreen
+import com.loaloaloa.ui.staff.StaffShell
+import com.loaloaloa.ui.staff.StaffTtsScreen
 import com.loaloaloa.ui.troubleshooting.TroubleshootingScreen
+
+@Composable
+fun AppRoot(
+    notifAccessGranted: Boolean,
+    onRequestNotificationAccess: () -> Unit = {},
+    onRequestBatteryExemption: () -> Unit = {},
+    pairToken: String? = null,
+    onPairTokenHandled: () -> Unit = {},
+    modeViewModel: AppModeViewModel = hiltViewModel(),
+) {
+    val state by modeViewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) { modeViewModel.ensureMigrated(notifAccessGranted) }
+
+    // A pairing deep-link on a not-yet-chosen install means this is a staff device.
+    LaunchedEffect(pairToken, state) {
+        val ready = state as? RootModeState.Ready
+        if (pairToken != null && ready?.appMode == AppMode.UNSET) {
+            modeViewModel.chooseStaff()
+        }
+    }
+
+    when (val s = state) {
+        RootModeState.Loading ->
+            Box(
+                Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) { CircularProgressIndicator() }
+
+        is RootModeState.Ready -> when (s.appMode) {
+            AppMode.UNSET ->
+                ModePickerScreen(
+                    onChooseShop = modeViewModel::chooseShop,
+                    onChooseStaff = modeViewModel::chooseStaff,
+                )
+
+            AppMode.STAFF -> {
+                val staffNav = rememberNavController()
+                NavHost(navController = staffNav, startDestination = Routes.STAFF) {
+                    composable(Routes.STAFF) {
+                        StaffShell(
+                            onOpenTts = { staffNav.navigate(Routes.STAFF_TTS) },
+                            onRequestBatteryExemption = onRequestBatteryExemption,
+                            pairToken = pairToken,
+                            onPairTokenHandled = onPairTokenHandled,
+                        )
+                    }
+                    composable(Routes.STAFF_TTS) {
+                        StaffTtsScreen(onBack = { staffNav.popBackStack() })
+                    }
+                }
+            }
+
+            AppMode.SHOP_OWNER ->
+                AppNavHost(
+                    startDestination = if (notifAccessGranted) Routes.HOME else Routes.ONBOARDING,
+                    onRequestNotificationAccess = onRequestNotificationAccess,
+                    onRequestBatteryExemption = onRequestBatteryExemption,
+                    pairToken = pairToken,
+                    onPairTokenHandled = onPairTokenHandled,
+                    onSwitchMode = modeViewModel::toPicker,
+                )
+        }
+    }
+}
 
 @Composable
 fun AppNavHost(
@@ -40,6 +117,7 @@ fun AppNavHost(
     onRequestBatteryExemption: () -> Unit = {},
     pairToken: String? = null,
     onPairTokenHandled: () -> Unit = {},
+    onSwitchMode: () -> Unit = {},
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -104,6 +182,7 @@ fun AppNavHost(
                     onOpenRelay = { navController.navigate(Routes.RELAY) },
                     onOpenTroubleshooting = { navController.navigate(Routes.TROUBLESHOOTING) },
                     onOpenDebug = { navController.navigate(Routes.DEBUG) },
+                    onSwitchMode = onSwitchMode,
                 )
             }
 

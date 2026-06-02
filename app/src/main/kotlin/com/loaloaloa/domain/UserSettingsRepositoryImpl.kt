@@ -2,8 +2,10 @@ package com.loaloaloa.domain
 
 import androidx.datastore.core.DataStore
 import com.loaloaloa.data.model.ApiConfig
+import com.loaloaloa.data.model.AppMode
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
+import com.loaloaloa.data.model.RelayRegisterState
 import com.loaloaloa.data.model.RelayRole
 import com.loaloaloa.data.model.RelayRoom
 import com.loaloaloa.data.model.SpeakOption
@@ -123,5 +125,13 @@ class UserSettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setRelayRoom(room: RelayRoom) {
         dataStore.updateData { it.copy(relayRoom = room) }
+    }
+
+    override suspend fun setRelayRegisterState(state: RelayRegisterState) {
+        dataStore.updateData { it.copy(relayRegisterState = state) }
+    }
+
+    override suspend fun updateAppMode(mode: AppMode) {
+        dataStore.updateData { it.copy(appMode = mode, settingsVersion = maxOf(it.settingsVersion, 1)) }
     }
 }

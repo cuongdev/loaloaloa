@@ -62,11 +62,25 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.loaloaloa.BuildConfig
 import com.loaloaloa.data.model.AudioOutput
 import com.loaloaloa.data.model.QuietHours
 import com.loaloaloa.data.model.RelayRole
 import com.loaloaloa.data.model.SpeakOption
 import com.loaloaloa.tts.SpeechTextBuilder
+import com.loaloaloa.update.UpdateChecker
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +92,7 @@ fun SettingsScreen(
     onOpenRelay: () -> Unit,
     onOpenTroubleshooting: () -> Unit,
     onOpenDebug: () -> Unit,
+    onSwitchMode: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val s by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,6 +103,11 @@ fun SettingsScreen(
     var quietEndDialog by remember { mutableStateOf(false) }
     var minAmountDialog by remember { mutableStateOf(false) }
     var lockedInfo by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var checkingUpdate by remember { mutableStateOf(false) }
+    var updateResult by remember { mutableStateOf<UpdateChecker.Result?>(null) }
 
     // On an employee (SPOKE) device the shop-config rows are locked: tapping one explains why
     // instead of navigating, so staff can't change the shop's wiring (relay, webhook, sources…).
@@ -179,6 +199,38 @@ fun SettingsScreen(
                 Divider()
                 NavRow(Icons.Filled.Build, "Khắc phục sự cố", locked = locked, onClick = onOpenTroubleshooting, onLocked = { lockedInfo = true })
             }
+
+            GroupHeader("Chế độ")
+            SettingsCard {
+                NavRow(
+                    icon = Icons.Filled.QrCodeScanner,
+                    title = "Đổi vai trò máy",
+                    value = "Chọn lại Chủ shop hoặc Nhân viên",
+                    onClick = onSwitchMode,
+                )
+            }
+
+            GroupHeader("Giới thiệu")
+            SettingsCard {
+                InfoRow(Icons.Filled.Info, "Phiên bản ứng dụng", "v${BuildConfig.VERSION_NAME}")
+                NavRow(
+                    Icons.Filled.SystemUpdate,
+                    "Kiểm tra cập nhật",
+                    value = if (checkingUpdate) "Đang kiểm tra…" else null,
+                ) {
+                    if (!checkingUpdate) {
+                        checkingUpdate = true
+                        scope.launch {
+                            val result = UpdateChecker.check(BuildConfig.VERSION_NAME)
+                            checkingUpdate = false
+                            updateResult = result
+                        }
+                    }
+                }
+                NavRow(Icons.Filled.Star, "Đánh giá ứng dụng") { context.openUrl(REPO_URL) }
+                NavRow(Icons.Filled.Share, "Chia sẻ ứng dụng") { context.shareApp() }
+                NavRow(Icons.Filled.SupportAgent, "Hỗ trợ & báo lỗi") { context.openUrl(ISSUES_URL) }
+            }
             Spacer(Modifier.height(16.dp))
         }
     }
@@ -229,6 +281,86 @@ fun SettingsScreen(
             title = { Text("Đã khoá") },
             text = { Text("Mục này chỉ chủ cửa hàng (máy chính) chỉnh được. Máy nhân viên chỉ chỉnh giọng nói, âm lượng và giờ yên tĩnh.") },
             confirmButton = { TextButton(onClick = { lockedInfo = false }) { Text("Đã hiểu") } },
+        )
+    }
+
+    updateResult?.let { result ->
+        val available = result as? UpdateChecker.Result.Available
+        val message = when (result) {
+            is UpdateChecker.Result.UpToDate ->
+                "Bạn đang dùng phiên bản mới nhất (v${result.current})."
+            is UpdateChecker.Result.Available ->
+                "Đã có phiên bản mới v${result.latest}. Tải về để cập nhật?"
+            UpdateChecker.Result.Failed ->
+                "Không kết nối được máy chủ. Vui lòng thử lại sau."
+        }
+        AlertDialog(
+            onDismissRequest = { updateResult = null },
+            title = { Text(if (available != null) "Có bản cập nhật" else "Kiểm tra cập nhật") },
+            text = { Text(message) },
+            confirmButton = {
+                if (available != null) {
+                    TextButton(onClick = {
+                        context.openUrl(available.url)
+                        updateResult = null
+                    }) { Text("Tải về") }
+                } else {
+                    TextButton(onClick = { updateResult = null }) { Text("Đóng") }
+                }
+            },
+            dismissButton = available?.let {
+                { TextButton(onClick = { updateResult = null }) { Text("Để sau") } }
+            },
+        )
+    }
+}
+
+private const val REPO_URL = "https://github.com/cuongdev/loaloaloa"
+private const val ISSUES_URL = "https://github.com/cuongdev/loaloaloa/issues"
+private const val LANDING_URL = "https://loaloaloa.haveuever.workers.dev/"
+
+private fun Context.openUrl(url: String) {
+    runCatching {
+        startActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+    }
+}
+
+private fun Context.shareApp() {
+    val send = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_SUBJECT, "Loa Loa Loa")
+        putExtra(
+            Intent.EXTRA_TEXT,
+            "Loa Loa Loa — nghe tiền chuyển khoản về ngay khi tới. Tải về: $LANDING_URL",
+        )
+    }
+    runCatching {
+        startActivity(
+            Intent.createChooser(send, "Chia sẻ Loa Loa Loa")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+    }
+}
+
+/** Read-only row (icon + title + value, no chevron) — used for the app-version line. */
+@Composable
+private fun InfoRow(icon: ImageVector, title: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+            Spacer(Modifier.size(12.dp))
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+        }
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

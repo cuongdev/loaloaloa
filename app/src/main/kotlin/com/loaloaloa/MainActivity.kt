@@ -13,8 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import com.loaloaloa.permission.BatteryOptimizationHelper
 import com.loaloaloa.permission.NotificationAccessHelper
-import com.loaloaloa.ui.navigation.AppNavHost
-import com.loaloaloa.ui.navigation.Routes
+import com.loaloaloa.ui.navigation.AppRoot
 import com.loaloaloa.ui.theme.LoaLoaLoaTheme
 import com.microsoft.clarity.Clarity
 import com.microsoft.clarity.ClarityConfig
@@ -46,12 +45,10 @@ class MainActivity : ComponentActivity() {
         maybeRequestPostNotifications()
         pendingPairToken.value = pairTokenFrom(intent)
 
-        val start = if (NotificationAccessHelper.isGranted(this)) Routes.HOME else Routes.ONBOARDING
-
         setContent {
             LoaLoaLoaTheme {
-                AppNavHost(
-                    startDestination = start,
+                AppRoot(
+                    notifAccessGranted = NotificationAccessHelper.isGranted(this),
                     onRequestNotificationAccess = { launchSafely { NotificationAccessHelper.settingsIntent() } },
                     onRequestBatteryExemption = { launchSafely { BatteryOptimizationHelper.requestIntent(packageName) } },
                     pairToken = pendingPairToken.value,
