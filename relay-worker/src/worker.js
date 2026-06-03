@@ -54,6 +54,7 @@
 
 import { spokeIndexHtml, spokeAppJs, spokeConfigJs, spokeSwJs, spokeManifest } from "./spoke.js";
 import { landingPage } from "./landing.js";
+import { privacyPage } from "./privacy.js";
 
 // Cached Google OAuth access token, reused across requests within a Worker isolate until it nears
 // expiry. Minting it costs an RSA sign + a round-trip, so caching keeps /send fast under burst.
@@ -76,6 +77,9 @@ export default {
         case "/":
           // Marketing landing page (see landing.js). Health checks moved to /healthz.
           return html(landingPage());
+        case "/privacy":
+        case "/privacy/":
+          return html(privacyPage());
         case "/healthz":
           return text("loaloaloa relay sender: ok");
         case "/pair":
