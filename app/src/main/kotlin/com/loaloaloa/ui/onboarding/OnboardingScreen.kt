@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Campaign
@@ -68,85 +70,92 @@ fun OnboardingScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(Modifier.height(24.dp))
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(80.dp)) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Campaign, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(40.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(24.dp))
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(80.dp)) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Filled.Campaign, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(40.dp))
+                    }
                 }
+                Spacer(Modifier.height(16.dp))
+                Text("Thiết lập Loa Loa Loa", style = MaterialTheme.typography.headlineMedium)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Loa Loa Loa đọc nội dung thông báo giao dịch từ ứng dụng ngân hàng của bạn để " +
+                        "đọc to số tiền trên loa. Nếu bạn bật chia sẻ, máy shop gửi giao dịch đã " +
+                        "mã hoá đầu-cuối tới máy nhân viên đã ghép. Dữ liệu được xử lý trên máy; máy " +
+                        "chủ trung gian không đọc được nội dung. Bạn có thể tắt quyền bất cứ lúc nào.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = {
+                    launchIntentSafely(context, "Không mở được trình duyệt") {
+                        android.content.Intent(
+                            android.content.Intent.ACTION_VIEW,
+                            android.net.Uri.parse("https://loaloaloa.haveuever.workers.dev/privacy"),
+                        )
+                    }
+                }) { Text("Chính sách quyền riêng tư") }
+                Spacer(Modifier.height(24.dp))
+
+                StepCard(
+                    number = 1,
+                    icon = Icons.Filled.Notifications,
+                    title = "Quyền đọc thông báo",
+                    subtitle = "Để nhận thông báo từ app ngân hàng",
+                    done = state.notificationAccessGranted,
+                    actionLabel = "Cấp quyền",
+                    primary = true,
+                    onAction = {
+                        launchIntentSafely(context, "Không mở được cài đặt quyền thông báo") {
+                            NotificationAccessHelper.settingsIntent()
+                        }
+                    },
+                )
+                Spacer(Modifier.height(12.dp))
+                StepCard(
+                    number = 2,
+                    icon = Icons.Filled.BatteryChargingFull,
+                    title = "Tắt tối ưu hoá pin",
+                    subtitle = "Giúp app chạy nền ổn định",
+                    done = state.batteryExempt,
+                    actionLabel = "Thiết lập",
+                    primary = true,
+                    onAction = {
+                        launchIntentSafely(context, "Thiết bị không hỗ trợ cài đặt này") {
+                            BatteryOptimizationHelper.requestIntent(context.packageName)
+                        }
+                    },
+                )
+                Spacer(Modifier.height(12.dp))
+                StepCard(
+                    number = 3,
+                    icon = Icons.Filled.RocketLaunch,
+                    title = "Cho phép tự khởi động",
+                    subtitle = "Tuỳ hãng máy (Xiaomi, Oppo, Vivo...)",
+                    done = false,
+                    actionLabel = "Mở cài đặt",
+                    primary = false,
+                    enabled = state.autostartAvailable,
+                    onAction = {
+                        launchIntentSafely(context, "Không tìm thấy cài đặt tự khởi động trên máy này") {
+                            OemAutostart.autostartIntent(Build.MANUFACTURER)
+                        }
+                    },
+                )
             }
-            Spacer(Modifier.height(16.dp))
-            Text("Thiết lập Loa Loa Loa", style = MaterialTheme.typography.headlineMedium)
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Loa Loa Loa đọc nội dung thông báo giao dịch từ ứng dụng ngân hàng của bạn để " +
-                    "đọc to số tiền trên loa. Nếu bạn bật chia sẻ, máy shop gửi giao dịch đã " +
-                    "mã hoá đầu-cuối tới máy nhân viên đã ghép. Dữ liệu được xử lý trên máy; máy " +
-                    "chủ trung gian không đọc được nội dung. Bạn có thể tắt quyền bất cứ lúc nào.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = {
-                launchIntentSafely(context, "Không mở được trình duyệt") {
-                    android.content.Intent(
-                        android.content.Intent.ACTION_VIEW,
-                        android.net.Uri.parse("https://loaloaloa.haveuever.workers.dev/privacy"),
-                    )
-                }
-            }) { Text("Chính sách quyền riêng tư") }
-            Spacer(Modifier.height(24.dp))
 
-            StepCard(
-                number = 1,
-                icon = Icons.Filled.Notifications,
-                title = "Quyền đọc thông báo",
-                subtitle = "Để nhận thông báo từ app ngân hàng",
-                done = state.notificationAccessGranted,
-                actionLabel = "Cấp quyền",
-                primary = true,
-                onAction = {
-                    launchIntentSafely(context, "Không mở được cài đặt quyền thông báo") {
-                        NotificationAccessHelper.settingsIntent()
-                    }
-                },
-            )
             Spacer(Modifier.height(12.dp))
-            StepCard(
-                number = 2,
-                icon = Icons.Filled.BatteryChargingFull,
-                title = "Tắt tối ưu hoá pin",
-                subtitle = "Giúp app chạy nền ổn định",
-                done = state.batteryExempt,
-                actionLabel = "Thiết lập",
-                primary = true,
-                onAction = {
-                    launchIntentSafely(context, "Thiết bị không hỗ trợ cài đặt này") {
-                        BatteryOptimizationHelper.requestIntent(context.packageName)
-                    }
-                },
-            )
-            Spacer(Modifier.height(12.dp))
-            StepCard(
-                number = 3,
-                icon = Icons.Filled.RocketLaunch,
-                title = "Cho phép tự khởi động",
-                subtitle = "Tuỳ hãng máy (Xiaomi, Oppo, Vivo...)",
-                done = false,
-                actionLabel = "Mở cài đặt",
-                primary = false,
-                enabled = state.autostartAvailable,
-                onAction = {
-                    launchIntentSafely(context, "Không tìm thấy cài đặt tự khởi động trên máy này") {
-                        OemAutostart.autostartIntent(Build.MANUFACTURER)
-                    }
-                },
-            )
-
-            Spacer(Modifier.weight(1f))
             Button(
                 onClick = onFinish,
                 modifier = Modifier.fillMaxWidth().height(52.dp),

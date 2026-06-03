@@ -16,7 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.Api
+// import androidx.compose.material.icons.filled.Api // tạm ẩn cùng "Nguồn API (SePay)"
 import androidx.compose.material.icons.filled.AppBlocking
 import androidx.compose.material.icons.filled.AudioFile
 import androidx.compose.material.icons.filled.BugReport
@@ -202,8 +202,9 @@ fun SettingsScreen(
                 Divider()
                 NavRow(Icons.Filled.AccountBalance, "Ngân hàng hỗ trợ", locked = locked, onClick = onOpenBanks, onLocked = { lockedInfo = true })
                 Divider()
-                NavRow(Icons.Filled.Api, "Nguồn API (SePay)", locked = locked, onClick = onOpenApiSource, onLocked = { lockedInfo = true })
-                Divider()
+                // Tạm ẩn "Nguồn API (SePay)" — chưa support. Bỏ comment (kèm import Api) để bật lại.
+                // NavRow(Icons.Filled.Api, "Nguồn API (SePay)", locked = locked, onClick = onOpenApiSource, onLocked = { lockedInfo = true })
+                // Divider()
                 NavRow(Icons.Filled.Webhook, "Webhook", locked = locked, onClick = onOpenWebhook, onLocked = { lockedInfo = true })
                 Divider()
                 NavRow(Icons.Filled.BugReport, "Gửi thông báo thử", locked = locked, onClick = onOpenDebug, onLocked = { lockedInfo = true })
@@ -349,7 +350,7 @@ private fun Context.shareApp() {
 @Composable
 private fun InfoRow(icon: ImageVector, title: String, value: String) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -394,7 +395,12 @@ private fun Divider() {
 @Composable
 private fun SwitchRow(icon: ImageVector, title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        // Cả hàng gạt được → vùng chạm là toàn hàng; Switch để onCheckedChange = null nên
+        // không ép vùng chạm tối thiểu 48dp, nhờ vậy hàng cao bằng NavRow (không bị đội lên).
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -403,7 +409,7 @@ private fun SwitchRow(icon: ImageVector, title: String, checked: Boolean, onChan
             Spacer(Modifier.size(12.dp))
             Text(title, style = MaterialTheme.typography.bodyLarge)
         }
-        Switch(checked = checked, onCheckedChange = onChange)
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
@@ -420,7 +426,7 @@ private fun NavRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = if (locked) onLocked else onClick)
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
