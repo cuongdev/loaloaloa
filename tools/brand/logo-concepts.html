@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { width:840px; background:#0f1419; font-family:-apple-system,system-ui,sans-serif; padding:20px; }
+  .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+  .cell { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .tile { width:380px; height:380px; border-radius:84px; overflow:hidden;
+          box-shadow:0 12px 40px rgba(0,0,0,.45); }
+  .tile img, .tile svg { width:100%; height:100%; display:block; }
+  .label { color:#cbd5e1; font-size:18px; font-weight:600; letter-spacing:.3px; }
+  .sub { color:#64748b; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="grid">
+
+  <!-- CURRENT (reference) -->
+  <div class="cell">
+    <div class="tile"><img src="file:///Users/cuong/projects/loaloaloa/app/play/icon-512.png"></div>
+    <div class="label">Bản hiện tại</div>
+    <div class="sub">reference</div>
+  </div>
+
+  <!-- CONCEPT A — Refined horn -->
+  <div class="cell">
+    <div class="tile">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#15b8a6"/><stop offset="1" stop-color="#115e59"/>
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill="url(#gA)"/>
+        <g fill="#fff">
+          <!-- mouthpiece cap -->
+          <rect x="20" y="42.5" width="9" height="15" rx="4"/>
+          <!-- horn cone pointing right -->
+          <path d="M29 41 L57 30 Q60 29 60 33 L60 67 Q60 71 57 70 L29 59 Z"/>
+          <!-- handle -->
+          <rect x="36" y="58" width="8" height="16" rx="4"/>
+        </g>
+        <!-- sound waves -->
+        <g fill="none" stroke="#cfeee9" stroke-width="4.4" stroke-linecap="round">
+          <path d="M66 41 Q72 50 66 59"/>
+          <path d="M73 36 Q82 50 73 64"/>
+        </g>
+      </svg>
+    </div>
+    <div class="label">Concept A — Refined</div>
+    <div class="sub">sạch, cân đối, gần bản gốc</div>
+  </div>
+
+  <!-- CONCEPT B — Bold tilt -->
+  <div class="cell">
+    <div class="tile">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="gB" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#15b8a6"/><stop offset="1" stop-color="#115e59"/>
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill="url(#gB)"/>
+        <g fill="#fff" transform="rotate(-16 50 50)">
+          <rect x="18" y="43" width="9" height="14" rx="4"/>
+          <path d="M27 41 L56 28 Q59 27 59 31 L59 69 Q59 73 56 72 L27 59 Z"/>
+          <rect x="34" y="58" width="8" height="18" rx="4"/>
+        </g>
+        <g fill="none" stroke="#a7f3e6" stroke-width="5" stroke-linecap="round" transform="rotate(-16 50 50)">
+          <path d="M64 40 Q71 50 64 60"/>
+          <path d="M71 34 Q81 50 71 66"/>
+          <path d="M78 28 Q91 50 78 72"/>
+        </g>
+      </svg>
+    </div>
+    <div class="label">Concept B — Bold</div>
+    <div class="sub">nghiêng, sóng mạnh, năng động</div>
+  </div>
+
+  <!-- CONCEPT C — Duotone + announce dot -->
+  <div class="cell">
+    <div class="tile">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="gC" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#15b8a6"/><stop offset="1" stop-color="#0f766e"/>
+          </linearGradient>
+        </defs>
+        <rect width="100" height="100" fill="url(#gC)"/>
+        <!-- soft inner glow circle -->
+        <circle cx="50" cy="50" r="33" fill="#ffffff" opacity="0.06"/>
+        <g fill="#fff">
+          <rect x="22" y="43" width="8" height="14" rx="4"/>
+          <path d="M30 41.5 L56 31 Q59 30 59 34 L59 66 Q59 70 56 69 L30 58.5 Z"/>
+          <rect x="37" y="57.5" width="7.5" height="15" rx="3.75"/>
+        </g>
+        <g fill="none" stroke="#7fe9d8" stroke-width="4.2" stroke-linecap="round">
+          <path d="M65 42 Q70 50 65 58"/>
+          <path d="M72 37 Q80 50 72 63"/>
+        </g>
+      </svg>
+    </div>
+    <div class="label">Concept C — Duotone</div>
+    <div class="sub">sóng màu mint, thân thiện</div>
+  </div>
+
+</div>
+</body>
+</html>

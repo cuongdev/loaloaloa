@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1024px;height:500px;overflow:hidden}
+  .stage{
+    width:1024px;height:500px;position:relative;
+    background:linear-gradient(125deg,#0EA5A4 0%,#0E7490 60%,#115E59 100%);
+    font-family:'Be Vietnam Pro',-apple-system,system-ui,sans-serif;
+    display:flex;align-items:center;gap:56px;padding:0 72px;
+  }
+  /* faint decorative sound rings on the right */
+  .rings{position:absolute;right:-120px;top:50%;transform:translateY(-50%);
+    width:520px;height:520px;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.08) 0 38%, transparent 39%),
+               radial-gradient(circle, rgba(255,255,255,.06) 0 52%, transparent 53%),
+               radial-gradient(circle, rgba(255,255,255,.05) 0 66%, transparent 67%);}
+  .tile{width:300px;height:300px;border-radius:68px;flex:0 0 auto;
+    box-shadow:0 26px 60px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.18);
+    overflow:hidden;position:relative;z-index:2}
+  .tile img{width:100%;height:100%;display:block}
+  .copy{position:relative;z-index:2;color:#fff}
+  .name{font-weight:800;font-size:82px;line-height:1;letter-spacing:-1.5px;
+    text-shadow:0 2px 18px rgba(0,0,0,.18)}
+  .tag{margin-top:22px;font-weight:400;font-size:30px;line-height:1.32;
+    color:rgba(255,255,255,.92);max-width:560px}
+</style></head>
+<body>
+  <div class="stage">
+    <div class="rings"></div>
+    <div class="tile"><img src="icon-master.svg"></div>
+    <div class="copy">
+      <div class="name">Loa Loa Loa</div>
+      <div class="tag">Đọc to biến động số dư trên loa<br>— nghe được cho cả cửa hàng</div>
+    </div>
+  </div>
+</body></html>

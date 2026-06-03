@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bar overlay for the report screenshot (raw 780x1768). Transparent except
+     the 7 weekly bars, composited over the empty chart area Stitch left blank.
+     Baseline y=1330; bars sit just above the T2..CN labels. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 1768" width="780" height="1768">
+  <g>
+    <rect x="133" y="1195" width="46" height="135" rx="9" fill="#0D9488"/>
+    <rect x="211" y="1111" width="46" height="219" rx="9" fill="#0D9488"/>
+    <rect x="289" y="1162" width="46" height="168" rx="9" fill="#0D9488"/>
+    <rect x="367" y="1060" width="46" height="270" rx="9" fill="#0D9488"/>
+    <rect x="445" y="1128" width="46" height="202" rx="9" fill="#0D9488"/>
+    <rect x="523" y="1010" width="46" height="320" rx="9" fill="#115E59"/>
+    <rect x="597" y="1145" width="46" height="185" rx="9" fill="#0D9488"/>
+  </g>
+</svg>
