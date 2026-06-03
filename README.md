@@ -53,6 +53,10 @@ Và khi điện thoại có app ngân hàng nằm một chỗ, còn nhân viên 
 (mã hoá đầu-cuối) từng giao dịch sang mọi điện thoại khác — hoặc lên một tab trình duyệt, **khỏi
 cần cài app**.
 
+Quán có **nhiều nhân viên, chạy theo ca**? Mỗi người **vào ca** trên máy của mình — hoặc dùng chung
+một máy ở quầy — và **mỗi giao dịch tự ghi tên người đang trực**. Cuối ca **chốt một cái** là biết
+ca đó ai bán, được bao nhiêu, rồi bàn giao sạch sẽ cho ca sau.
+
 ---
 
 ## ✨ Tính năng
@@ -65,10 +69,35 @@ cần cài app**.
 | 🌐 **Spoke trên web — khỏi cài app** | Mở một đường link trên trình duyệt là nghe đọc giao dịch qua Web Speech API, đủ cả lịch sử, báo cáo, quản lý thiết bị. |
 | 🔗 **Chuyển tiếp đi khắp nơi** | Đẩy mỗi giao dịch sang **Telegram**, **Google Sheets**, **Google Forms**, POS, hay **n8n**. Nhiều đích cùng lúc, lọc theo ca, theo tiền vào / tiền ra. |
 | 📊 **Báo cáo & tăng trưởng** | Thu nhập ngày / tuần / tháng, biểu đồ xu hướng, giờ cao điểm, chia theo từng ngân hàng, xuất CSV. |
-| 🧾 **Chốt ca bàn giao** | Theo dõi tổng tiền của ca hiện tại, bàn giao gọn gàng giữa các nhân viên. |
+| 👥 **Chế độ nhân viên & nhiều máy** | Mỗi nhân viên một máy *spoke* (ghép bằng quét QR) — hoặc dùng chung một máy ở quầy. Chủ quán quản lý & thu hồi từng thiết bị. |
+| 🧾 **Vào ca · chốt ca · gắn tên người trực** | Nhân viên **vào ca**, app chạy bộ đếm tổng tiền của ca; **mỗi giao dịch tự đính tên người đang trực** ("NV: An, Bình") để cuối ca biết ai bán — bàn giao gọn cho ca sau. |
 | 🧩 **Widget màn hình chính** | Liếc một cái thấy ngay tổng tiền hôm nay + trạng thái dịch vụ, dựng bằng Jetpack Glance. |
 | 🔁 **Sống sót qua khởi động lại & tiết kiệm pin** | Foreground service + WorkManager giám sát + boot receiver giữ bộ lắng nghe luôn hoạt động. |
 | 🔒 **Riêng tư từ gốc** | Mọi thứ đọc & lưu **ngay trên máy**; relay mã hoá đầu-cuối; **không** chỗ nào đăng nhập ngân hàng. |
+
+---
+
+## 👥 Cả quán cùng bán — nhân viên & ca làm
+
+> ### 🧾 "Ca này ai trực, bán được nhiêu?"
+> Quán đông, nhân viên thay ca liên tục — cuối ngày chủ quán muốn biết **ca nào, ai trực, tiền về
+> bao nhiêu**. Loa Loa Loa biến chuyện đó thành tự động: ai **vào ca** thì tên người đó **dính luôn
+> vào từng giao dịch**, **chốt ca** một cái là có ngay con số. 🧮
+
+- 🧑‍🍳 **Chế độ Nhân viên (Staff).** Máy của nhân viên là *spoke* — **không cần app ngân hàng**, ghép
+  vào quán bằng quét QR là vẫn nghe tiền về, xem lịch sử, báo cáo.
+- ⏱️ **Vào ca chỉ một chạm.** Nhân viên gõ tên → **vào ca** → bộ đếm tổng tiền của ca bắt đầu chạy.
+- 📱 **Một máy chung hay mỗi người một máy đều được.** Quầy dùng chung một điện thoại: thêm nhiều tên
+  cùng trực (`NV: An, Bình`). Mỗi người một máy: chỉ tên người đó.
+- 🏷️ **Mỗi giao dịch ghi rõ người trực.** Tên người đang ca được đính vào nội dung giao dịch, hiện
+  trong **Lịch sử** & **Báo cáo** — hết cảnh "không biết ca đó ai làm".
+- 🔄 **Chốt ca, bàn giao sạch.** Đóng ca là tổng tiền ca chốt lại, danh sách trực được dọn, ca sau
+  bắt đầu lại từ con số 0.
+- 🕗 **Chuyển tiếp lọc theo ca.** Webhook (Telegram / Google Sheet / POS) có thể chỉ bắn trong khung
+  giờ ca làm — báo cáo cho đúng người, đúng lúc.
+
+> 🔒 Riêng tư như mọi thứ khác trong app: tên nhân viên & dữ liệu ca **nằm trên máy**, relay vẫn chỉ
+> thấy chuỗi mã hoá.
 
 ---
 
