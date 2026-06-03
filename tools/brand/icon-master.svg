@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Loa Loa Loa app icon master — Logo B (bold tilted megaphone).
+     viewBox 108x108 (adaptive units). Full-bleed teal gradient + white mark
+     within the central safe zone (<72u) so it survives circular masking.
+     Teal matches drawable/ic_launcher_background.xml (#0EA5A4 -> #0E7490). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0EA5A4"/>
+      <stop offset="1" stop-color="#0E7490"/>
+    </linearGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#bg)"/>
+
+  <!-- Mark: designed in a 0..100 space, scaled ~0.86 and centered into the
+       108 canvas safe zone. translate(54,55) scale(0.86) translate(-54.5,-50) -->
+  <g transform="translate(54,55) scale(0.86) translate(-54.5,-50)">
+    <g transform="rotate(-15 54.5 50)">
+      <g fill="#ffffff">
+        <rect x="18" y="42.5" width="9.5" height="15" rx="4.2"/>
+        <path d="M27.5 40.5 L57 27 Q60 26 60 30.5 L60 69.5 Q60 74 57 73 L27.5 59.5 Z"/>
+        <rect x="34" y="58" width="8.5" height="18.5" rx="4.2"/>
+      </g>
+      <g fill="none" stroke="#bff3ea" stroke-width="5" stroke-linecap="round">
+        <path d="M65 40 Q72 50 65 60"/>
+        <path d="M72.5 34 Q82.5 50 72.5 66"/>
+        <path d="M80 28 Q92.5 50 80 72"/>
+      </g>
+    </g>
+  </g>
+</svg>
