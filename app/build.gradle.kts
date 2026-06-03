@@ -112,11 +112,9 @@ dependencies {
     // The BoM pins versions; the messaging artifact pulls in FirebaseMessagingService.
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
-    implementation(libs.firebase.analytics)
     implementation(libs.coroutines.play.services)
-
-    // Microsoft Clarity — session recording + heatmaps for the in-app experience.
-    implementation(libs.clarity.compose)
+    // GoogleApiAvailability (FcmTokenProvider) — was transitively via firebase-analytics, now explicit.
+    implementation(libs.play.services.base)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)

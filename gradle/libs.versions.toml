@@ -28,8 +28,6 @@ zxing = "4.3.0"
 firebaseBom = "33.7.0"
 googleServices = "4.4.2"
 coroutinesPlayServices = "1.9.0"
-clarity = "3.+"
-
 [libraries]
 core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
@@ -72,9 +70,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxing" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
-clarity-compose = { module = "com.microsoft.clarity:clarity-compose", version.ref = "clarity" }
+play-services-base = { module = "com.google.android.gms:play-services-base", version = "18.5.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
