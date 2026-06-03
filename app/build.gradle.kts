@@ -42,12 +42,30 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+        create("release") {
+            // CI sets these env vars (decoded from secrets) — the real Play UPLOAD key.
+            val uploadStore = System.getenv("UPLOAD_KEYSTORE_PATH")
+            if (uploadStore != null) {
+                storeFile = file(uploadStore)
+                storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("UPLOAD_KEY_ALIAS")
+                keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+            } else {
+                // Local fallback: sign release with the committed debug keystore so a local
+                // `bundleRelease` produces a working AAB for testing. NOT the key uploaded to Play.
+                storeFile = file("debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
