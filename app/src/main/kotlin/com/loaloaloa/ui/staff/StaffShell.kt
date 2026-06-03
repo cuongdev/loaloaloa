@@ -7,6 +7,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,27 +18,35 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -128,6 +138,15 @@ fun StaffShell(
             topBar = {
                 TopAppBar(
                     title = { Text("Nhân viên", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = viewModel::unpairToShop) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Quay lại chọn chế độ",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
                 )
             },
@@ -195,6 +214,12 @@ fun StaffShell(
                 status = status,
                 latest = latest,
                 enableService = s.enableService,
+                staffName = s.staffName,
+                activeStaff = s.activeStaff,
+                onClockIn = viewModel::clockIn,
+                onAddStaff = viewModel::addStaff,
+                onRemoveStaff = viewModel::removeStaff,
+                onRenameStaff = viewModel::setStaffName,
                 onLoaToggle = viewModel::setLoaEnabled,
                 onRetry = viewModel::retryRegister,
                 onRequestBatteryExemption = onRequestBatteryExemption,
@@ -222,6 +247,12 @@ private fun LoaTab(
     status: StaffConnStatus,
     latest: TransactionRecord?,
     enableService: Boolean,
+    staffName: String,
+    activeStaff: List<String>,
+    onClockIn: (String) -> Unit,
+    onAddStaff: (String) -> Unit,
+    onRemoveStaff: (String) -> Unit,
+    onRenameStaff: (String) -> Unit,
     onLoaToggle: (Boolean) -> Unit,
     onRetry: () -> Unit,
     onRequestBatteryExemption: () -> Unit,
@@ -263,6 +294,15 @@ private fun LoaTab(
             }
         }
 
+        StaffShiftCard(
+            staffName = staffName,
+            activeStaff = activeStaff,
+            onClockIn = onClockIn,
+            onAddStaff = onAddStaff,
+            onRemoveStaff = onRemoveStaff,
+            onRenameStaff = onRenameStaff,
+        )
+
         StatusCard(status = status, latest = latest, onRetry = onRetry)
 
         OutlinedButton(onClick = onRequestBatteryExemption, modifier = Modifier.fillMaxWidth()) {
@@ -299,6 +339,138 @@ private fun LoaTab(
 
         Spacer(Modifier.size(16.dp))
     }
+}
+
+private enum class StaffDialogMode { CLOCK_IN, ADD, RENAME }
+
+/**
+ * "Nhân viên trong ca" — sets/changes this device's employee name and manages who is on shift.
+ * While the roster is non-empty every received transaction is stamped with these names. Tapping a
+ * name chip clocks that person out; "Thêm nhân viên" supports a shared counter with several people.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StaffShiftCard(
+    staffName: String,
+    activeStaff: List<String>,
+    onClockIn: (String) -> Unit,
+    onAddStaff: (String) -> Unit,
+    onRemoveStaff: (String) -> Unit,
+    onRenameStaff: (String) -> Unit,
+) {
+    var dialogMode by remember { mutableStateOf<StaffDialogMode?>(null) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.size(12.dp))
+                Text(
+                    "Nhân viên trong ca",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                TextButton(onClick = { dialogMode = StaffDialogMode.RENAME }) {
+                    Text(if (staffName.isBlank()) "Đặt tên" else "Đổi tên")
+                }
+            }
+
+            Text(
+                "Tên máy: " + staffName.ifBlank { "chưa đặt" },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            if (activeStaff.isEmpty()) {
+                Text(
+                    "Chưa bắt đầu ca. Bấm “Bắt đầu ca” để mỗi giao dịch nhận được ghi kèm tên người trực.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Button(onClick = { dialogMode = StaffDialogMode.CLOCK_IN }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Bắt đầu ca")
+                }
+            } else {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    activeStaff.forEach { name ->
+                        InputChip(
+                            selected = true,
+                            onClick = { onRemoveStaff(name) },
+                            label = { Text(name) },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Filled.Close,
+                                    contentDescription = "Cho $name tan ca",
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            },
+                        )
+                    }
+                }
+                OutlinedButton(onClick = { dialogMode = StaffDialogMode.ADD }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Thêm nhân viên")
+                }
+            }
+        }
+    }
+
+    dialogMode?.let { mode ->
+        val (title, confirm) = when (mode) {
+            StaffDialogMode.CLOCK_IN -> "Bắt đầu ca" to "Bắt đầu"
+            StaffDialogMode.ADD -> "Thêm nhân viên" to "Thêm"
+            StaffDialogMode.RENAME -> "Đổi tên nhân viên" to "Lưu"
+        }
+        StaffNameDialog(
+            title = title,
+            confirmLabel = confirm,
+            initial = if (mode == StaffDialogMode.ADD) "" else staffName,
+            onDismiss = { dialogMode = null },
+            onConfirm = { name ->
+                when (mode) {
+                    StaffDialogMode.CLOCK_IN -> onClockIn(name)
+                    StaffDialogMode.ADD -> onAddStaff(name)
+                    StaffDialogMode.RENAME -> onRenameStaff(name)
+                }
+                dialogMode = null
+            },
+        )
+    }
+}
+
+@Composable
+private fun StaffNameDialog(
+    title: String,
+    confirmLabel: String,
+    initial: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit,
+) {
+    var text by remember { mutableStateOf(initial) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                singleLine = true,
+                label = { Text("Tên nhân viên") },
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(text.trim()) }, enabled = text.isNotBlank()) {
+                Text(confirmLabel)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Huỷ") } },
+    )
 }
 
 @Composable

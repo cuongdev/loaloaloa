@@ -53,6 +53,12 @@ interface UserSettingsRepository {
     /** Open a work shift at [startedAtMillis], or pass null to close/clear the current shift. */
     suspend fun setShiftStartedAt(startedAtMillis: Long?)
 
+    /** Set this device's default employee name (staff shell); pass "" to clear. */
+    suspend fun setStaffName(name: String)
+
+    /** Replace the list of employees currently on shift on this device (stamped onto transaction notes). */
+    suspend fun setActiveStaff(names: List<String>)
+
     /** Replace the set of user-added notification sources (package name → display name). */
     suspend fun setCustomApps(apps: Map<String, String>)
 

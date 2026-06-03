@@ -16,6 +16,7 @@ import com.loaloaloa.relay.RelayRegistrar
 import com.loaloaloa.relay.toRoom
 import com.loaloaloa.ui.settings.DevicesUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,6 +38,7 @@ class StaffViewModel @Inject constructor(
     private val registrar: RelayRegistrar,
     private val directory: RelayDirectory,
     transactions: TransactionRepository,
+    private val clock: Clock,
 ) : ViewModel() {
 
     val uiState: StateFlow<UserSettings> = repo.settings
@@ -125,5 +127,44 @@ class StaffViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Clock the named employee in: remember [name] as this device's default, add them to the
+     * on-shift roster (deduped), and open the shift counter if one isn't already running. Blank
+     * names are ignored. From now on every relayed transaction has this name stamped on its note.
+     */
+    fun clockIn(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch {
+            val s = repo.settings.first()
+            repo.setStaffName(trimmed)
+            repo.setActiveStaff(withName(s.activeStaff, trimmed))
+            if (s.shiftStartedAt == null) repo.setShiftStartedAt(clock.millis())
+        }
+    }
+
+    /** Add another employee to the current shift's roster (shared counter). Blank names ignored. */
+    fun addStaff(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
+        viewModelScope.launch { repo.setActiveStaff(withName(repo.settings.first().activeStaff, trimmed)) }
+    }
+
+    /** Remove one employee from the current shift's roster (clocked out early). */
+    fun removeStaff(name: String) {
+        viewModelScope.launch { repo.setActiveStaff(repo.settings.first().activeStaff.filterNot { it == name }) }
+    }
+
+    /** Change this device's default employee name without touching the active roster. */
+    fun setStaffName(name: String) {
+        viewModelScope.launch { repo.setStaffName(name.trim()) }
+    }
+
     fun clearScanInvalid() { _scanInvalid.value = false }
+
+    private companion object {
+        /** Append [name] to [current], trimming, dropping blanks, and removing duplicates. */
+        fun withName(current: List<String>, name: String): List<String> =
+            (current + name).map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+    }
 }

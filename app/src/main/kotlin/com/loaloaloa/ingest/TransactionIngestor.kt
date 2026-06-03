@@ -43,8 +43,11 @@ class TransactionIngestor @Inject constructor(
     suspend fun ingest(model: TransactionModel) {
         val settings = userSettingsRepository.settings.first()
 
-        // Persist regardless of announcement policy so history is always complete.
-        runCatching { transactionRepository.addTransaction(model) }
+        // Persist regardless of announcement policy so history is always complete. On a staff
+        // device with an open shift, stamp the on-duty employee name(s) onto the note so each
+        // transaction records who was working when it arrived (empty staff = unchanged note).
+        val note = StaffNote.combine(base = "", activeStaff = settings.activeStaff)
+        runCatching { transactionRepository.addTransaction(model, note) }
             .onFailure { Timber.w(it, "Failed to persist transaction") }
 
         // Live-refresh the home-screen widget so today's total + latest line update as

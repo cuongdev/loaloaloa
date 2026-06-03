@@ -88,11 +88,15 @@ class ShiftViewModel @Inject constructor(
             val rows = transactions.filter(null, null, startedAt, Long.MAX_VALUE).first()
             shareChannel.send(ShiftSummary.build(startedAt, clock.millis(), rows, zone))
             settings.setShiftStartedAt(null)
+            settings.setActiveStaff(emptyList())
         }
     }
 
     /** End the shift without sharing anything. */
     fun cancelShift() {
-        viewModelScope.launch { settings.setShiftStartedAt(null) }
+        viewModelScope.launch {
+            settings.setShiftStartedAt(null)
+            settings.setActiveStaff(emptyList())
+        }
     }
 }

@@ -115,6 +115,14 @@ class UserSettingsRepositoryImpl @Inject constructor(
         dataStore.updateData { it.copy(shiftStartedAt = startedAtMillis) }
     }
 
+    override suspend fun setStaffName(name: String) {
+        dataStore.updateData { it.copy(staffName = name) }
+    }
+
+    override suspend fun setActiveStaff(names: List<String>) {
+        dataStore.updateData { it.copy(activeStaff = names) }
+    }
+
     override suspend fun setCustomApps(apps: Map<String, String>) {
         dataStore.updateData { it.copy(customApps = apps) }
     }

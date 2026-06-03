@@ -14,6 +14,9 @@ import com.loaloaloa.relay.RelayPairingCodec
 import com.loaloaloa.relay.RelayRegistrar
 import com.loaloaloa.ui.fake.FakeTransactionRepository
 import com.loaloaloa.ui.fake.FakeUserSettingsRepository
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -46,8 +49,10 @@ class StaffViewModelTest {
             Result.success(Unit)
     }
 
+    private val clock = Clock.fixed(Instant.ofEpochMilli(123_000L), ZoneId.of("UTC"))
+
     private fun makeVm(repo: FakeUserSettingsRepository) =
-        StaffViewModel(repo, FakeRegistrar(), FakeDirectory(), FakeTransactionRepository())
+        StaffViewModel(repo, FakeRegistrar(), FakeDirectory(), FakeTransactionRepository(), clock)
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)
     @After fun tearDown() = Dispatchers.resetMain()
@@ -98,5 +103,71 @@ class StaffViewModelTest {
         vm.setLoaEnabled(false)
         advanceUntilIdle()
         assertThat(repo.current.enableService).isFalse()
+    }
+
+    @Test fun `clockIn sets staff name, opens shift, and adds to roster`() = runTest(dispatcher) {
+        val repo = FakeUserSettingsRepository()
+        val vm = makeVm(repo)
+
+        vm.clockIn("  An  ")
+        advanceUntilIdle()
+
+        assertThat(repo.current.staffName).isEqualTo("An")
+        assertThat(repo.current.activeStaff).containsExactly("An")
+        assertThat(repo.current.shiftStartedAt).isEqualTo(123_000L)
+    }
+
+    @Test fun `clockIn ignores blank names`() = runTest(dispatcher) {
+        val repo = FakeUserSettingsRepository()
+        val vm = makeVm(repo)
+
+        vm.clockIn("   ")
+        advanceUntilIdle()
+
+        assertThat(repo.current.activeStaff).isEmpty()
+        assertThat(repo.current.shiftStartedAt).isNull()
+    }
+
+    @Test fun `clockIn keeps an already-open shift's start time`() = runTest(dispatcher) {
+        val repo = FakeUserSettingsRepository(UserSettings(shiftStartedAt = 50_000L))
+        val vm = makeVm(repo)
+
+        vm.clockIn("Bình")
+        advanceUntilIdle()
+
+        assertThat(repo.current.shiftStartedAt).isEqualTo(50_000L)
+    }
+
+    @Test fun `addStaff appends to roster and dedupes`() = runTest(dispatcher) {
+        val repo = FakeUserSettingsRepository(UserSettings(activeStaff = listOf("An")))
+        val vm = makeVm(repo)
+
+        vm.addStaff("Bình")
+        advanceUntilIdle()
+        vm.addStaff("An") // duplicate
+        advanceUntilIdle()
+
+        assertThat(repo.current.activeStaff).containsExactly("An", "Bình").inOrder()
+    }
+
+    @Test fun `removeStaff drops one name from the roster`() = runTest(dispatcher) {
+        val repo = FakeUserSettingsRepository(UserSettings(activeStaff = listOf("An", "Bình")))
+        val vm = makeVm(repo)
+
+        vm.removeStaff("An")
+        advanceUntilIdle()
+
+        assertThat(repo.current.activeStaff).containsExactly("Bình")
+    }
+
+    @Test fun `setStaffName changes the device name without touching the roster`() = runTest(dispatcher) {
+        val repo = FakeUserSettingsRepository(UserSettings(staffName = "An", activeStaff = listOf("An")))
+        val vm = makeVm(repo)
+
+        vm.setStaffName("  Chi  ")
+        advanceUntilIdle()
+
+        assertThat(repo.current.staffName).isEqualTo("Chi")
+        assertThat(repo.current.activeStaff).containsExactly("An")
     }
 }

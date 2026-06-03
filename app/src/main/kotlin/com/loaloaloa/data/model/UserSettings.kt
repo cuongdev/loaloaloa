@@ -179,6 +179,19 @@ data class UserSettings(
      */
     val shiftStartedAt: Long? = null,
     /**
+     * Default employee name on THIS device (set once, editable). Used to prefill the "Bắt đầu ca"
+     * dialog in the staff shell and as the prompt-to-set-name signal when blank. Additive field;
+     * an empty default keeps previously-persisted settings JSON loading cleanly.
+     */
+    val staffName: String = "",
+    /**
+     * Employees currently on shift on THIS device. Every transaction ingested while this is
+     * non-empty gets their names stamped onto its note (see [com.loaloaloa.ingest.StaffNote]).
+     * One device may hold several names (shared counter); each device tags only its own. Cleared
+     * when the shift closes. Additive field; an empty default keeps old settings JSON loading cleanly.
+     */
+    val activeStaff: List<String> = emptyList(),
+    /**
      * User-added notification sources beyond the built-in [com.loaloaloa.parser.BankRegistry]
      * whitelist: package name → display name captured at add-time (so the notification path needs no
      * PackageManager lookup). Notifications from these packages are parsed like any bank's — they only

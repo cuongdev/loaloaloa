@@ -58,6 +58,10 @@ class FakeUserSettingsRepository(
         state.update { it.copy(webhooks = webhooks, webhook = WebhookConfig()) }
     override suspend fun setShiftStartedAt(startedAtMillis: Long?) =
         state.update { it.copy(shiftStartedAt = startedAtMillis) }
+    override suspend fun setStaffName(name: String) =
+        state.update { it.copy(staffName = name) }
+    override suspend fun setActiveStaff(names: List<String>) =
+        state.update { it.copy(activeStaff = names) }
     override suspend fun setCustomApps(apps: Map<String, String>) =
         state.update { it.copy(customApps = apps) }
     override suspend fun updateRelayRole(role: RelayRole) =
