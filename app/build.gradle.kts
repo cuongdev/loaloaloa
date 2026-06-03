@@ -29,6 +29,21 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        // Stable debug keystore committed to the repo so every build (local + CI) signs with the
+        // SAME key. The published APK is a debug build (see .releaserc.json `assembleDebug`); without
+        // a fixed key each CI runner generates a random debug keystore, so Android rejects in-place
+        // updates (INSTALL_FAILED_UPDATE_INCOMPATIBLE) and users must uninstall + reinstall, losing
+        // their on-device data. A debug keystore is NOT a secret — these are the well-known Android
+        // debug credentials (alias androiddebugkey / password "android"), safe to commit.
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
