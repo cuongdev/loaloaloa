@@ -129,6 +129,19 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // Group: Chia sẻ & vai trò
+            GroupHeader("Chia sẻ & vai trò")
+            SettingsCard {
+                NavRow(Icons.Filled.Campaign, "Chia sẻ thông báo (loa nhân viên)", locked = locked, onClick = onOpenRelay, onLocked = { lockedInfo = true })
+                Divider()
+                NavRow(
+                    icon = Icons.Filled.QrCodeScanner,
+                    title = "Đổi vai trò máy",
+                    value = "Chọn lại Chủ shop hoặc Nhân viên",
+                    onClick = onSwitchMode,
+                )
+            }
+
             // Group: Giọng nói & âm thanh
             GroupHeader("Giọng nói & âm thanh")
             SettingsCard {
@@ -193,21 +206,9 @@ fun SettingsScreen(
                 Divider()
                 NavRow(Icons.Filled.Webhook, "Webhook", locked = locked, onClick = onOpenWebhook, onLocked = { lockedInfo = true })
                 Divider()
-                NavRow(Icons.Filled.Campaign, "Chia sẻ thông báo (loa nhân viên)", locked = locked, onClick = onOpenRelay, onLocked = { lockedInfo = true })
-                Divider()
                 NavRow(Icons.Filled.BugReport, "Gửi thông báo thử", locked = locked, onClick = onOpenDebug, onLocked = { lockedInfo = true })
                 Divider()
                 NavRow(Icons.Filled.Build, "Khắc phục sự cố", locked = locked, onClick = onOpenTroubleshooting, onLocked = { lockedInfo = true })
-            }
-
-            GroupHeader("Chế độ")
-            SettingsCard {
-                NavRow(
-                    icon = Icons.Filled.QrCodeScanner,
-                    title = "Đổi vai trò máy",
-                    value = "Chọn lại Chủ shop hoặc Nhân viên",
-                    onClick = onSwitchMode,
-                )
             }
 
             GroupHeader("Giới thiệu")
