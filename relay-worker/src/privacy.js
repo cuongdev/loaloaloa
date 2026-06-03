@@ -133,7 +133,7 @@ export function privacyPage() {
 <p>Nếu bạn có câu hỏi về chính sách này hoặc muốn yêu cầu xoá dữ liệu, vui lòng liên hệ qua email: <a href="mailto:lienhe@loaloaloa.app">lienhe@loaloaloa.app</a></p>
 
 <h2>10. Cập nhật chính sách</h2>
-<p>Chúng tôi có thể cập nhật chính sách này khi tính năng của ứng dụng thay đổi. Phiên bản mới nhất luôn được đăng tại địa chỉ <a href="/privacy">loaloaloa.app/privacy</a>. Ngày cập nhật gần nhất được ghi ở đầu trang.</p>
+<p>Chúng tôi có thể cập nhật chính sách này khi tính năng của ứng dụng thay đổi. Phiên bản mới nhất luôn được đăng tại địa chỉ <a href="/privacy">loaloaloa.haveuever.workers.dev/privacy</a>. Ngày cập nhật gần nhất được ghi ở đầu trang.</p>
 
 </div><!-- .prose -->
 </div><!-- .wrap -->
@@ -141,9 +141,10 @@ export function privacyPage() {
 
 <footer><div class="wrap">
   Làm cho người bán hàng Việt — những người chỉ mong nghe được tiếng tiền về.<br/>
-  <a href="/">Trang chủ</a> · <a href="/privacy">Chính sách quyền riêng tư</a> · © 2026 Loa Loa Loa
+  <a href="/">Trang chủ</a> · <a href="/privacy">Chính sách quyền riêng tư</a> · © <span id="yr"></span> Loa Loa Loa
 </div></footer>
 
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
 </body>
 </html>`;
 }
