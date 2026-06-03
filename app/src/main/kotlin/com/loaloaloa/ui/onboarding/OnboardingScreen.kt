@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -79,11 +80,24 @@ fun OnboardingScreen(
             Text("Thiết lập Loa Loa Loa", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Cần vài quyền để đọc và đọc to thông báo chuyển khoản",
+                "Loa Loa Loa đọc nội dung thông báo giao dịch từ ứng dụng ngân hàng của bạn để " +
+                    "đọc to số tiền trên loa. Nếu bạn bật chia sẻ, máy shop gửi giao dịch đã " +
+                    "mã hoá đầu-cuối tới máy nhân viên đã ghép. Dữ liệu được xử lý trên máy; máy " +
+                    "chủ trung gian không đọc được nội dung. Bạn có thể tắt quyền bất cứ lúc nào.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
+            Spacer(Modifier.height(8.dp))
+            TextButton(onClick = {
+                launchIntentSafely(context, "Không mở được trình duyệt") {
+                    android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://loaloaloa.haveuever.workers.dev/privacy"),
+                    )
+                }
+            }) { Text("Chính sách quyền riêng tư") }
             Spacer(Modifier.height(24.dp))
 
             StepCard(

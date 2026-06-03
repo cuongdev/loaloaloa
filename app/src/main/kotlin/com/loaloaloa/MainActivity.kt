@@ -15,9 +15,6 @@ import com.loaloaloa.permission.BatteryOptimizationHelper
 import com.loaloaloa.permission.NotificationAccessHelper
 import com.loaloaloa.ui.navigation.AppRoot
 import com.loaloaloa.ui.theme.LoaLoaLoaTheme
-import com.microsoft.clarity.Clarity
-import com.microsoft.clarity.ClarityConfig
-import com.microsoft.clarity.models.LogLevel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,15 +29,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Microsoft Clarity session recording. Verbose logs in debug, silent in release.
-        Clarity.initialize(
-            applicationContext,
-            ClarityConfig(
-                projectId = "x0p6ldkrn0",
-                logLevel = if (BuildConfig.DEBUG) LogLevel.Verbose else LogLevel.None,
-            ),
-        )
 
         maybeRequestPostNotifications()
         pendingPairToken.value = pairTokenFrom(intent)

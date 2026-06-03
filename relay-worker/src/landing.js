@@ -277,7 +277,7 @@ export function landingPage() {
 
 <footer><div class="wrap">
   Làm cho người bán hàng Việt — những người chỉ mong nghe được tiếng tiền về. <span style="display:inline-grid;width:16px;height:16px;place-items:center;color:var(--teal-d);vertical-align:-3px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2"/><path d="M5 9v6"/><path d="M19 3v18l-7-4H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h7l7-4z"/><path d="M22 8.5c1 1 1 5 0 7"/></svg></span><br/>
-  <a href="${REPO}">GitHub</a> · <a href="${WEB_DEMO}">Web demo</a> · <a href="${APK}">Tải APK</a> · © <span id="yr"></span> Loa Loa Loa
+  <a href="${REPO}">GitHub</a> · <a href="${WEB_DEMO}">Web demo</a> · <a href="${APK}">Tải APK</a> · <a href="/privacy">Chính sách quyền riêng tư</a> · © <span id="yr"></span> Loa Loa Loa
 </div></footer>
 
 <script>document.getElementById('yr').textContent=new Date().getFullYear();</script>

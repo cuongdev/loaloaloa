@@ -54,9 +54,24 @@ jobs:
             echo "No GOOGLE_SERVICES_JSON secret set; building relay-inactive APK."
           fi
 
+      - name: Provision upload keystore
+        env:
+          UPLOAD_KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_B64" ]; then
+            echo "$UPLOAD_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+            echo "UPLOAD_KEYSTORE_PATH=$RUNNER_TEMP/upload.keystore" >> "$GITHUB_ENV"
+            echo "Upload keystore provisioned."
+          else
+            echo "No UPLOAD_KEYSTORE_B64; release AAB will use the debug-key fallback."
+          fi
+
       - name: Semantic release (version, build APK, publish)
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Monotonically increasing Android versionCode, required to be unique per release.
           VERSION_CODE: ${{ github.run_number }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}

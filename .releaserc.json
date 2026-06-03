@@ -7,14 +7,15 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "VERSION_NAME=${nextRelease.version} ./gradlew --no-daemon assembleDebug && cp app/build/outputs/apk/debug/app-debug.apk loaloaloa.apk"
+        "prepareCmd": "VERSION_NAME=${nextRelease.version} ./gradlew --no-daemon assembleDebug bundleRelease && cp app/build/outputs/apk/debug/app-debug.apk loaloaloa.apk && cp app/build/outputs/bundle/release/app-release.aab loaloaloa.aab"
       }
     ],
     [
       "@semantic-release/github",
       {
         "assets": [
-          { "path": "loaloaloa.apk", "name": "loaloaloa.apk", "label": "Loa Loa Loa ${nextRelease.version} — Android APK (sideload)" }
+          { "path": "loaloaloa.apk", "name": "loaloaloa.apk", "label": "Loa Loa Loa ${nextRelease.version} — Android APK (sideload)" },
+          {"path":"loaloaloa.aab","name":"loaloaloa.aab","label":"Loa Loa Loa ${nextRelease.version} — Android App Bundle (Play)"}
         ]
       }
     ]
