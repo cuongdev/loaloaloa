@@ -21,8 +21,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -88,15 +91,31 @@ fun OnboardingScreen(
                 Text("Thiết lập Loa Loa Loa", style = MaterialTheme.typography.headlineMedium)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Loa Loa Loa đọc nội dung thông báo giao dịch từ ứng dụng ngân hàng của bạn để " +
-                        "đọc to số tiền trên loa. Nếu bạn bật chia sẻ, máy shop gửi giao dịch đã " +
-                        "mã hoá đầu-cuối tới máy nhân viên đã ghép. Dữ liệu được xử lý trên máy; máy " +
-                        "chủ trung gian không đọc được nội dung. Bạn có thể tắt quyền bất cứ lúc nào.",
+                    "Loa Loa Loa đọc nội dung thông báo giao dịch từ app ngân hàng của bạn " +
+                        "để đọc to số tiền trên loa.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
+                Spacer(Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    PrivacyBullet(
+                        icon = Icons.Filled.Lock,
+                        text = "Chia sẻ (nếu bật): gửi mã hoá đầu–cuối tới máy nhân viên đã ghép",
+                    )
+                    PrivacyBullet(
+                        icon = Icons.Filled.Smartphone,
+                        text = "Xử lý trên máy — máy chủ trung gian không đọc được nội dung",
+                    )
+                    PrivacyBullet(
+                        icon = Icons.Filled.PowerSettingsNew,
+                        text = "Bạn có thể tắt quyền bất cứ lúc nào",
+                    )
+                }
                 Spacer(Modifier.height(8.dp))
                 TextButton(onClick = {
                     launchIntentSafely(context, "Không mở được trình duyệt") {
@@ -137,22 +156,23 @@ fun OnboardingScreen(
                         }
                     },
                 )
-                Spacer(Modifier.height(12.dp))
-                StepCard(
-                    number = 3,
-                    icon = Icons.Filled.RocketLaunch,
-                    title = "Cho phép tự khởi động",
-                    subtitle = "Tuỳ hãng máy (Xiaomi, Oppo, Vivo...)",
-                    done = false,
-                    actionLabel = "Mở cài đặt",
-                    primary = false,
-                    enabled = state.autostartAvailable,
-                    onAction = {
-                        launchIntentSafely(context, "Không tìm thấy cài đặt tự khởi động trên máy này") {
-                            OemAutostart.autostartIntent(Build.MANUFACTURER)
-                        }
-                    },
-                )
+                if (state.autostartAvailable) {
+                    Spacer(Modifier.height(12.dp))
+                    StepCard(
+                        number = 3,
+                        icon = Icons.Filled.RocketLaunch,
+                        title = "Cho phép tự khởi động",
+                        subtitle = "Tuỳ hãng máy (Xiaomi, Oppo, Vivo...)",
+                        done = false,
+                        actionLabel = "Mở cài đặt",
+                        primary = false,
+                        onAction = {
+                            launchIntentSafely(context, "Không tìm thấy cài đặt tự khởi động trên máy này") {
+                                OemAutostart.autostartIntent(Build.MANUFACTURER)
+                            }
+                        },
+                    )
+                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -165,6 +185,25 @@ fun OnboardingScreen(
             }
             Spacer(Modifier.height(16.dp))
         }
+    }
+}
+
+@Composable
+private fun PrivacyBullet(icon: ImageVector, text: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.size(10.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
     }
 }
 
