@@ -101,7 +101,11 @@ export function privacyPage() {
 </ul>
 
 <h2>4. Lưu trữ dữ liệu</h2>
-<p>Lịch sử giao dịch được lưu trong <strong>cơ sở dữ liệu cục bộ trên thiết bị của bạn</strong> (Room database). Máy chủ relay chỉ lưu FCM token để định tuyến thông báo đẩy; máy chủ <strong>không lưu nội dung giao dịch</strong> ở dạng có thể đọc được.</p>
+<p>Lịch sử giao dịch được lưu trong <strong>cơ sở dữ liệu cục bộ trên thiết bị của bạn</strong> (Room database). Khi bạn bật tính năng chia sẻ đa thiết bị, máy chủ relay lưu thêm:</p>
+<ul>
+  <li><strong>FCM token</strong> của mỗi máy đã ghép — để định tuyến thông báo đẩy.</li>
+  <li><strong>Lịch sử giao dịch ở dạng đã mã hoá đầu-cuối (ciphertext)</strong> — để máy nhân viên hoặc bảng điều khiển web đã ghép tải lại lịch sử và báo cáo. Dữ liệu này được giữ tối đa <strong>210 ngày</strong> rồi tự động xoá, và máy chủ <strong>không thể giải mã</strong> nội dung.</li>
+</ul>
 <div class="note">Máy chủ trung gian chỉ lưu trữ chuỗi đã mã hoá E2E — ngay cả đội ngũ phát triển ứng dụng cũng không thể giải mã nội dung này.</div>
 
 <h2>5. Chia sẻ với bên thứ ba</h2>
@@ -121,9 +125,10 @@ export function privacyPage() {
 
 <h2>7. Xoá dữ liệu</h2>
 <ul>
-  <li><strong>Gỡ cài đặt ứng dụng</strong> sẽ xoá toàn bộ dữ liệu cục bộ (lịch sử giao dịch, cấu hình, khoá mã hoá).</li>
-  <li><strong>Huỷ ghép thiết bị</strong> (từ máy shop hoặc từ màn hình Thiết bị trong ứng dụng) sẽ xoá FCM token của máy đó khỏi phòng trên máy chủ relay.</li>
-  <li>Không có tài khoản người dùng trên máy chủ — không cần liên hệ để yêu cầu xoá tài khoản.</li>
+  <li><strong>Gỡ cài đặt ứng dụng</strong> sẽ xoá toàn bộ dữ liệu cục bộ (lịch sử giao dịch, cấu hình, khoá mã hoá) trên máy đó.</li>
+  <li><strong>Huỷ ghép / đóng phòng</strong> trên máy shop sẽ xoá khỏi máy chủ relay <strong>toàn bộ</strong> dữ liệu của phòng: FCM token của mọi máy đã ghép và toàn bộ lịch sử giao dịch đã mã hoá.</li>
+  <li><strong>Huỷ ghép một máy nhân viên</strong> sẽ xoá FCM token của riêng máy đó khỏi phòng.</li>
+  <li>Không có tài khoản người dùng trên máy chủ. Nếu cần hỗ trợ xoá dữ liệu, vui lòng liên hệ qua email ở mục 9.</li>
 </ul>
 
 <h2>8. Bảo mật</h2>

@@ -367,8 +367,10 @@ async function handleRevoke(request, env) {
 }
 
 // POST /close {roomId} — the hub destroys the whole room: delete it from KV so every spoke
-// (phone or web) gets a 404 on its next /devices poll and unpairs itself. Signed with the room's
-// macKey, so only a device holding the room secret can close it.
+// (phone or web) gets a 404 on its next /devices poll and unpairs itself, AND purge the room's
+// stored ciphertext history from D1. Signed with the room's macKey, so only a device holding the
+// room secret can close it. This is the user-facing "delete all server data" action: after it,
+// nothing about the room (tokens, audit log, or encrypted transactions) survives on the relay.
 async function handleClose(request, env) {
   const bodyText = await request.text();
   const signature = request.headers.get("X-Relay-Signature") || "";
@@ -386,6 +388,16 @@ async function handleClose(request, env) {
   }
 
   await env.RELAY_KV.delete(key);
+  // Purge the room's encrypted transaction history too, so closing a room genuinely wipes ALL
+  // server-side data (matching the privacy policy's deletion promise). Best-effort: a D1 hiccup
+  // must not fail the close — the KV delete already unpairs every device. No-op if D1 isn't bound.
+  if (env.RELAY_DB) {
+    try {
+      await env.RELAY_DB.prepare("DELETE FROM tx WHERE room = ?").bind(roomId).run();
+    } catch (e) {
+      console.warn("history purge on close failed", e && e.message ? e.message : e);
+    }
+  }
   return json({ ok: true, closed: true });
 }
 
