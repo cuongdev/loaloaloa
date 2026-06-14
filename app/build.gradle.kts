@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.play.publisher)
 }
 
 // The google-services plugin hard-fails if google-services.json is missing. Apply it only when the
@@ -86,6 +87,26 @@ android {
         unitTests.isReturnDefaultValues = true
         unitTests.isIncludeAndroidResources = true
     }
+}
+
+// Gradle Play Publisher (com.github.triplet.play). Uploads the signed AAB + store listing from
+// app/src/main/play/ to a Play track. Credentials are read from the ANDROID_PUBLISHER_CREDENTIALS
+// env var (set in CI from the PLAY_SERVICE_ACCOUNT_JSON secret); when it's absent, the publish*
+// tasks simply fail — ordinary assemble/bundle builds are never affected. Override the track per run
+// with `--track internal|closed|production`. Default DRAFT so nothing rolls out without a human
+// flipping it to "live" in Console. See docs/play-publish-automation.md.
+play {
+    track.set("internal")
+    defaultToAppBundles.set(true)
+    // DRAFT: nothing reaches testers/production until a human flips it live in Console (or a run
+    // passes `--release-status completed`). Safe default for automated uploads.
+    releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
+    // AUTO: pick a versionCode one higher than the max already on Play, so uploads never collide
+    // with the GitHub-release builds' codes. Falls back to the manifest code on the first upload.
+    resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.AUTO)
+    // CI/local point this at the service-account JSON file. Absent → publish* tasks fail by design;
+    // assemble/bundle are never affected.
+    System.getenv("PLAY_SERVICE_ACCOUNT_JSON_FILE")?.let { serviceAccountCredentials.set(file(it)) }
 }
 
 dependencies {

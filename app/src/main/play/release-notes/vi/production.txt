@@ -1,0 +1,1 @@
+Phiên bản đầu: đọc to biến động số dư từ thông báo ngân hàng; loa cho cả cửa hàng qua kết nối mã hoá đầu-cuối; lịch sử, báo cáo, chốt ca.

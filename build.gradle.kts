@@ -7,4 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     // Applied conditionally in :app only when google-services.json is present (see app/build.gradle.kts).
     alias(libs.plugins.google.services) apply false
+    // Gradle Play Publisher — uploads the AAB + store listing to a Play track. Applied in :app.
+    // Publish tasks only run when ANDROID_PUBLISHER_CREDENTIALS is set; normal builds are unaffected.
+    alias(libs.plugins.play.publisher) apply false
 }

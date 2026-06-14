@@ -1,0 +1,94 @@
+name: Publish to Play
+
+# Manual-only: uploads the signed AAB (and, optionally, the store listing) to a Play track via
+# Gradle Play Publisher. The first release of a brand-new app must still be created + uploaded in
+# the Play Console by hand; this workflow is for release 2+ and for promoting builds to tracks.
+# It does NOT (cannot) touch Data safety, content rating, or permission declarations — those have
+# no API. See docs/play-publish-automation.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Play track"
+        type: choice
+        options: [internal, closed, production]
+        default: internal
+      release_status:
+        description: "Release status"
+        type: choice
+        options: [draft, completed]
+        default: draft
+      publish_listing:
+        description: "Also push store listing text + graphics (OVERWRITES the Console listing)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Provision Firebase config
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
+            echo "Wrote app/google-services.json (FCM enabled)."
+          else
+            echo "::warning::No GOOGLE_SERVICES_JSON; building a relay-inactive AAB."
+          fi
+
+      - name: Provision upload keystore
+        env:
+          UPLOAD_KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$UPLOAD_KEYSTORE_B64" ]; then
+            echo "::error::UPLOAD_KEYSTORE_B64 is required to sign the AAB for Play."; exit 1
+          fi
+          echo "$UPLOAD_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+          echo "UPLOAD_KEYSTORE_PATH=$RUNNER_TEMP/upload.keystore" >> "$GITHUB_ENV"
+
+      - name: Provision Play service account
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::PLAY_SERVICE_ACCOUNT_JSON (base64 of the SA JSON) is required."; exit 1
+          fi
+          echo "$PLAY_SERVICE_ACCOUNT_JSON" | base64 -d > "$RUNNER_TEMP/play-sa.json"
+          echo "PLAY_SERVICE_ACCOUNT_JSON_FILE=$RUNNER_TEMP/play-sa.json" >> "$GITHUB_ENV"
+
+      - name: Publish AAB to ${{ inputs.track }} (${{ inputs.release_status }})
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: ${{ github.ref_name }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          ./gradlew --no-daemon publishReleaseBundle \
+            --track "${{ inputs.track }}" \
+            --release-status "${{ inputs.release_status }}"
+
+      - name: Publish store listing (optional — overwrites Console)
+        if: ${{ inputs.publish_listing }}
+        run: ./gradlew --no-daemon publishReleaseListing

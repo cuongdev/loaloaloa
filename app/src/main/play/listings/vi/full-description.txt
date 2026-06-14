@@ -1,0 +1,16 @@
+Loa Loa Loa đọc to biến động số dư ngay khi có giao dịch — bạn và nhân viên nghe được tiền vào/ra mà không cần nhìn điện thoại.
+
+TÍNH NĂNG CHÍNH
+• Đọc to giao dịch: khi app ngân hàng báo có tiền vào/ra, Loa Loa Loa đọc số tiền lên loa bằng tiếng Việt.
+• Loa cho cả cửa hàng (chia sẻ thông báo): máy chủ (đã đăng nhập ngân hàng) tạo một "phòng" và hiện mã QR; mỗi máy nhân viên quét mã để cùng nghe — KHÔNG cần đăng nhập ngân hàng trên máy nhân viên.
+• Bảo mật đầu-cuối: giao dịch chia sẻ giữa các máy được mã hoá đầu-cuối; máy chủ trung gian không đọc được nội dung.
+• Lịch sử & báo cáo: xem lại giao dịch, tổng thu theo ngày/tuần/tháng, biểu đồ.
+• Chốt ca / bàn giao: tổng kết ca làm việc cho nhân viên.
+• Webhook & nguồn SePay (tuỳ chọn): chuyển tiếp giao dịch tới hệ thống của bạn nếu cần.
+• Tuỳ chỉnh loa: chọn đọc tiền vào/ra, âm lượng tối đa, kênh âm thanh.
+
+VÌ SAO CẦN QUYỀN ĐỌC THÔNG BÁO
+Loa Loa Loa cần quyền đọc thông báo để lấy nội dung thông báo giao dịch từ ứng dụng ngân hàng và đọc to. Dữ liệu được xử lý trên máy; bạn có thể tắt quyền bất cứ lúc nào.
+
+QUYỀN RIÊNG TƯ
+Xử lý ngay trên máy của bạn; khi bật chia sẻ đa thiết bị, giao dịch được mã hoá đầu-cuối trước khi rời máy. Không bán, không chia sẻ cho bên thứ ba. Xem chính sách: https://loaloaloa.haveuever.workers.dev/privacy
