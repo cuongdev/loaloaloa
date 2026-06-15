@@ -101,9 +101,12 @@ play {
     // DRAFT: nothing reaches testers/production until a human flips it live in Console (or a run
     // passes `--release-status completed`). Safe default for automated uploads.
     releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
-    // AUTO: pick a versionCode one higher than the max already on Play, so uploads never collide
-    // with the GitHub-release builds' codes. Falls back to the manifest code on the first upload.
-    resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.AUTO)
+    // IGNORE (the default): never query Play during a plain `bundleRelease`. AUTO would hook a
+    // version-code-resolution task into the bundle pipeline that calls the Play API — which breaks
+    // the regular release.yml build (no service-account creds there, and a 403 fails the task).
+    // CI already stamps a unique, monotonic versionCode via the VERSION_CODE env (github.run_number),
+    // so auto-resolution isn't needed; publish* tasks upload that code as-is.
+    resolutionStrategy.set(com.github.triplet.gradle.androidpublisher.ResolutionStrategy.IGNORE)
     // CI/local point this at the service-account JSON file. Absent → publish* tasks fail by design;
     // assemble/bundle are never affected.
     System.getenv("PLAY_SERVICE_ACCOUNT_JSON_FILE")?.let { serviceAccountCredentials.set(file(it)) }
