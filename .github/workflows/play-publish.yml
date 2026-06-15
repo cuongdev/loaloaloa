@@ -10,9 +10,11 @@ on:
   workflow_dispatch:
     inputs:
       track:
-        description: "Play track"
+        # Play API track identifiers are fixed: internal | alpha (= Closed testing) |
+        # beta (= Open testing) | production. There is no track literally named "closed".
+        description: "Play track (alpha = Closed testing)"
         type: choice
-        options: [internal, closed, production]
+        options: [internal, alpha, beta, production]
         default: internal
       release_status:
         description: "Release status"

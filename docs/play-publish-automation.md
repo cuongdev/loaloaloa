@@ -40,7 +40,7 @@ Repo → Settings → Secrets and variables → Actions. Cần (một số đã 
 **Lần đầu của app mới:** vẫn phải tạo app + upload AAB đầu tiên + điền mọi form policy **bằng tay** trong Console. API không tạo app được.
 
 **Sau đó:** GitHub → tab **Actions → Publish to Play → Run workflow**, chọn:
-- `track`: internal / closed / production
+- `track`: internal / **alpha** (= Thử nghiệm khép kín / Closed testing) / beta (= mở) / production. Lưu ý: Play API không có track tên "closed" — closed testing chính là `alpha`.
 - `release_status`: `draft` (mặc định, an toàn — vào Console bấm live) hoặc `completed` (đẩy thẳng tới track)
 - `publish_listing`: bật nếu muốn ghi đè listing trên Console bằng `app/src/main/play/` ⚠️
 
